@@ -65,7 +65,6 @@ export interface RegisterRequest {
   nombre: string;
   email: string;
   password: string;
-  rol: Rol;
 }
 
 export interface AuthResponse {
@@ -75,4 +74,29 @@ export interface AuthResponse {
   nombre: string;
   email: string;
   rol: Rol;
+}
+
+// ─── Dashboard ADMIN ──────────────────────────────────────────────
+// Debe coincidir con el DTO del backend (GET /dashboard/admin/estadisticas).
+
+export interface RolStat {
+  rol: Rol;
+  cantidad: number;
+}
+
+export interface IngresoTipoPlanStat {
+  tipoPlan: TipoPlan;
+  ingresoEstimado: number;
+  cantidadSuscripciones: number;
+}
+
+export interface EstadoSuscripcionStat {
+  estado: EstadoSuscripcion;
+  cantidad: number;
+}
+
+export interface DashboardAdminStatsDTO {
+  usuariosPorRol: RolStat[];
+  ingresosPorTipoPlan: IngresoTipoPlanStat[];
+  suscripcionesPorEstado: EstadoSuscripcionStat[];
 }

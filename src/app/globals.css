@@ -1,26 +1,102 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Superficie: concreto industrial, ni cream cálido ni negro puro */
+  --color-concrete-50: #f7f6f3;
+  --color-concrete-100: #ece9e3;
+  --color-concrete-200: #dbd7cd;
+  --color-concrete-300: #c2bcae;
+
+  /* Chrome: tinta casi negra, usada en sidebar y texto de alto contraste */
+  --color-ink-900: #1c1d20;
+  --color-ink-800: #26272b;
+  --color-ink-700: #35363b;
+  --color-ink-500: #6b6c70;
+
+  /* Acento primario: amarillo de señalización de equipos de gimnasio */
+  --color-hazard-400: #f0b429;
+  --color-hazard-500: #e0a012;
+  --color-hazard-600: #b9800a;
+
+  /* Estados */
+  --color-moss-100: #e3ede6;
+  --color-moss-600: #3f7a57;
+  --color-moss-700: #2f5c41;
+
+  --color-rust-100: #f5e3dd;
+  --color-rust-600: #b23a24;
+  --color-rust-700: #8f2d1b;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-concrete-50: var(--color-concrete-50);
+  --color-concrete-100: var(--color-concrete-100);
+  --color-concrete-200: var(--color-concrete-200);
+  --color-concrete-300: var(--color-concrete-300);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-ink-900: var(--color-ink-900);
+  --color-ink-800: var(--color-ink-800);
+  --color-ink-700: var(--color-ink-700);
+  --color-ink-500: var(--color-ink-500);
+
+  --color-hazard-400: var(--color-hazard-400);
+  --color-hazard-500: var(--color-hazard-500);
+  --color-hazard-600: var(--color-hazard-600);
+
+  --color-moss-100: var(--color-moss-100);
+  --color-moss-600: var(--color-moss-600);
+  --color-moss-700: var(--color-moss-700);
+
+  --color-rust-100: var(--color-rust-100);
+  --color-rust-600: var(--color-rust-600);
+  --color-rust-700: var(--color-rust-700);
+
+  --font-display: var(--font-oswald);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-concrete-100);
+  color: var(--color-ink-900);
+  font-family: var(--font-sans);
+}
+
+/* Ranura de "check-in" para inputs — leve inset en vez del outline por defecto */
+.input-plate {
+  background: var(--color-concrete-50);
+  border: 1px solid var(--color-concrete-300);
+}
+.input-plate:focus {
+  border-color: var(--color-ink-900);
+  outline: 2px solid var(--color-hazard-400);
+  outline-offset: -1px;
+}
+/* Chrome pinta los inputs de celeste cuando autocompleta una contraseña
+   guardada, ignorando background-color. Se neutraliza con un box-shadow
+   inset del mismo color que el fondo deseado. */
+.input-plate:-webkit-autofill,
+.input-plate:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--color-ink-900);
+  box-shadow: 0 0 0 1000px var(--color-concrete-50) inset;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+/* Textura sutil tipo piso de caucho moteado, para fondos oscuros grandes */
+.bg-rubber-floor {
+  background-color: var(--color-ink-900);
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(255,255,255,0.025) 0, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(255,255,255,0.02) 0, transparent 45%),
+    repeating-linear-gradient(135deg, rgba(255,255,255,0.015) 0 2px, transparent 2px 14px);
+}
+
+/* Franja de "cinta de peligro" — diagonales negro/ámbar, como el rotulado
+   de seguridad en equipos de gimnasio */
+.hazard-stripe {
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--color-hazard-400) 0 10px,
+    var(--color-ink-900) 10px 20px
+  );
 }

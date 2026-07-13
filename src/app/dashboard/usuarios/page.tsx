@@ -5,6 +5,16 @@ import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { hasRole } from "@/lib/auth";
 import { Rol, UsuarioResponseDTO } from "@/types";
+import {
+  input,
+  errorBanner,
+  buttonSecondary,
+  badgeEstado,
+  tableWrap,
+  tableHead,
+  tableHeadCell,
+  tableRowDivide,
+} from "@/lib/ui";
 
 const ROLES: Rol[] = ["ADMIN", "ENTRENADOR", "CLIENTE"];
 
@@ -30,10 +40,11 @@ export default function UsuariosPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get<UsuarioResponseDTO[]>("/usuarios", {
+      // El backend devuelve Page<UsuarioResponseDTO> desde la paginación (3.3).
+      const res = await api.get<{ content: UsuarioResponseDTO[] }>("/usuarios", {
         params: filtroRol ? { rol: filtroRol } : {},
       });
-      setUsuarios(res.data);
+      setUsuarios(res.data.content);
     } catch (err) {
       setError("No se pudieron cargar los usuarios.");
       console.error(err);
@@ -63,18 +74,18 @@ export default function UsuariosPage() {
   }
 
   if (!autorizado) {
-    return <p className="text-sm text-gray-500">Verificando acceso...</p>;
+    return <p className="font-mono text-sm text-ink-500">Verificando acceso...</p>;
   }
 
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-gray-900">Usuarios</h1>
+        <h1 className="font-display text-3xl font-bold text-ink-900">Usuarios</h1>
 
         <select
           value={filtroRol}
           onChange={(e) => setFiltroRol(e.target.value as Rol | "")}
-          className="rounded-md border border-gray-300 px-3 py-1.5 text-sm outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
+          className={`${input} w-auto`}
         >
           <option value="">Todos los roles</option>
           {ROLES.map((r) => (
@@ -85,58 +96,46 @@ export default function UsuariosPage() {
         </select>
       </div>
 
-      {error && (
-        <p className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
-      )}
+      {error && <p className={`mb-4 ${errorBanner}`}>{error}</p>}
 
       {loading ? (
-        <p className="text-sm text-gray-500">Cargando usuarios...</p>
+        <p className="font-mono text-sm text-ink-500">Cargando usuarios...</p>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-gray-200 bg-gray-50 text-gray-500">
+        <div className={tableWrap}>
+          <table className="w-full min-w-[720px] text-left text-sm">
+            <thead className={tableHead}>
               <tr>
-                <th className="px-4 py-3 font-medium">Nombre</th>
-                <th className="px-4 py-3 font-medium">Email</th>
-                <th className="px-4 py-3 font-medium">Rol</th>
-                <th className="px-4 py-3 font-medium">Estado</th>
-                <th className="px-4 py-3 font-medium">Registrado</th>
-                <th className="px-4 py-3 font-medium"></th>
+                <th className={tableHeadCell}>Nombre</th>
+                <th className={tableHeadCell}>Email</th>
+                <th className={tableHeadCell}>Rol</th>
+                <th className={tableHeadCell}>Estado</th>
+                <th className={tableHeadCell}>Registrado</th>
+                <th className={tableHeadCell}></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className={tableRowDivide}>
               {usuarios.map((u) => (
                 <tr key={u.id}>
-                  <td className="px-4 py-3 text-gray-900">{u.nombre}</td>
-                  <td className="px-4 py-3 text-gray-600">{u.email}</td>
+                  <td className="px-4 py-3 text-ink-900">{u.nombre}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-ink-500">{u.email}</td>
                   <td className="px-4 py-3">
-                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
-                      {u.rol}
-                    </span>
+                    <span className={badgeEstado("neutral")}>{u.rol}</span>
                   </td>
                   <td className="px-4 py-3">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                        u.activo ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-                      }`}
-                    >
+                    <span className={badgeEstado(u.activo ? "moss" : "neutral")}>
                       {u.activo ? "Activo" : "Inactivo"}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-gray-500">
+                  <td className="px-4 py-3 font-mono text-xs text-ink-500">
                     {new Date(u.creadoEn).toLocaleDateString("es-CO")}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => cambiarEstado(u)}
                       disabled={cambiandoId === u.id}
-                      className="rounded-md border border-gray-300 px-3 py-1 text-xs text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
+                      className={buttonSecondary}
                     >
-                      {cambiandoId === u.id
-                        ? "..."
-                        : u.activo
-                        ? "Desactivar"
-                        : "Activar"}
+                      {cambiandoId === u.id ? "..." : u.activo ? "Desactivar" : "Activar"}
                     </button>
                   </td>
                 </tr>
@@ -145,7 +144,7 @@ export default function UsuariosPage() {
           </table>
 
           {usuarios.length === 0 && (
-            <p className="px-4 py-6 text-center text-sm text-gray-500">
+            <p className="px-4 py-6 text-center font-mono text-sm text-ink-500">
               No hay usuarios con ese filtro.
             </p>
           )}

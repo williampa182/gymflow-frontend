@@ -1,42 +1,45 @@
 import { Rol } from "@/types";
 
-export function saveSession(id: number, nombre: string, email: string, rol: Rol, token: string) {
-  localStorage.setItem("token", token);
-  localStorage.setItem("rol", rol);
-  localStorage.setItem("userId", String(id));
-  localStorage.setItem("nombre", nombre);
-  localStorage.setItem("email", email);
+interface Session {
+  id: number;
+  nombre: string;
+  email: string;
+  rol: Rol;
 }
 
-export function getToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("token");
-}
+// Lee la cookie "session" (no httpOnly, solo datos no sensibles: id/nombre/email/rol).
+// El JWT real vive en la cookie "token" (httpOnly) y nunca pasa por aquí.
+function getSession(): Session | null {
+  if (typeof document === "undefined") return null;
 
-export function getRol(): Rol | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("rol") as Rol | null;
-}
+  const match = document.cookie.match(/(?:^|; )session=([^;]*)/);
+  if (!match) return null;
 
-export function getNombre(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("nombre");
+  try {
+    return JSON.parse(decodeURIComponent(match[1])) as Session;
+  } catch {
+    return null;
+  }
 }
 
 export function isAuthenticated(): boolean {
-  return !!getToken();
+  return getSession() !== null;
 }
 
-export function logout() {
-  localStorage.removeItem("token");
-  localStorage.removeItem("rol");
-  localStorage.removeItem("userId");
-  localStorage.removeItem("nombre");
-  localStorage.removeItem("email");
-  window.location.href = "/login";
+export function getRol(): Rol | null {
+  return getSession()?.rol ?? null;
+}
+
+export function getNombre(): string | null {
+  return getSession()?.nombre ?? null;
 }
 
 export function hasRole(...roles: Rol[]): boolean {
   const rol = getRol();
   return rol !== null && roles.includes(rol);
+}
+
+export async function logout() {
+  await fetch("/api/auth/logout", { method: "POST" });
+  window.location.href = "/login";
 }

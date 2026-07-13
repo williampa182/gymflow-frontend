@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { getRol } from "@/lib/auth";
-import { PlanResponseDTO, SuscripcionResponseDTO, UsuarioResponseDTO } from "@/types";
+import { errorBanner } from "@/lib/ui";
+import AdminDashboardCharts from "./_components/AdminDashboardCharts";
 
 interface Stats {
   totalUsuarios: number | null; // null = no autorizado a verlo (no-ADMIN)
@@ -22,15 +23,17 @@ export default function DashboardPage() {
       const esAdmin = rol === "ADMIN";
 
       try {
-        // /api/planes lo puede ver cualquier usuario autenticado
-        const planesReq = api.get<PlanResponseDTO[]>("/planes", { params: { activo: true } });
+        // Los tres endpoints devuelven Page<T> desde la paginación (3.3) —
+        // el array real está en .content, y totalElements ya viene calculado
+        // por Spring Data (más preciso que .content.length si hay más de una
+        // página, ya que .content solo trae los items de la página actual).
+        const planesReq = api.get<{ totalElements: number }>("/planes", { params: { activo: true } });
 
-        // Estos dos son solo-ADMIN según @PreAuthorize en el backend
         const usuariosReq = esAdmin
-          ? api.get<UsuarioResponseDTO[]>("/usuarios")
+          ? api.get<{ totalElements: number }>("/usuarios")
           : Promise.resolve(null);
         const suscripcionesReq = esAdmin
-          ? api.get<SuscripcionResponseDTO[]>("/suscripciones", { params: { estado: "ACTIVA" } })
+          ? api.get<{ totalElements: number }>("/suscripciones", { params: { estado: "ACTIVA" } })
           : Promise.resolve(null);
 
         const [planesRes, usuariosRes, suscripcionesRes] = await Promise.all([
@@ -40,9 +43,9 @@ export default function DashboardPage() {
         ]);
 
         setStats({
-          totalPlanesActivos: planesRes.data.length,
-          totalUsuarios: usuariosRes ? usuariosRes.data.length : null,
-          totalSuscripcionesActivas: suscripcionesRes ? suscripcionesRes.data.length : null,
+          totalPlanesActivos: planesRes.data.totalElements,
+          totalUsuarios: usuariosRes ? usuariosRes.data.totalElements : null,
+          totalSuscripcionesActivas: suscripcionesRes ? suscripcionesRes.data.totalElements : null,
         });
       } catch (err) {
         setError("No se pudieron cargar las estadísticas.");
@@ -56,54 +59,78 @@ export default function DashboardPage() {
   }, []);
 
   if (loading) {
-    return <p className="text-sm text-gray-500">Cargando estadísticas...</p>;
+    return <p className="font-mono text-sm text-ink-500">Cargando estadísticas...</p>;
   }
 
   if (error) {
-    return <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>;
+    return <p className={errorBanner}>{error}</p>;
   }
 
   return (
     <div>
-      <h1 className="mb-6 text-xl font-semibold text-gray-900">Dashboard</h1>
+      <h1 className="mb-1 font-display text-3xl font-bold text-ink-900">Dashboard</h1>
+      <p className="mb-8 text-sm text-ink-500">Resumen general del gimnasio</p>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard
-          label="Planes activos"
-          value={stats?.totalPlanesActivos}
-        />
-        <StatCard
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+        <PlateStat label="Planes activos" value={stats?.totalPlanesActivos} variante="hazard" />
+        <PlateStat
           label="Usuarios registrados"
           value={stats?.totalUsuarios}
           restringido={stats?.totalUsuarios === null}
+          variante="moss"
         />
-        <StatCard
+        <PlateStat
           label="Suscripciones activas"
           value={stats?.totalSuscripcionesActivas}
           restringido={stats?.totalSuscripcionesActivas === null}
+          variante="rust"
         />
       </div>
+
+      {getRol() === "ADMIN" && (
+        <div className="mt-8">
+          <AdminDashboardCharts />
+        </div>
+      )}
     </div>
   );
 }
 
-function StatCard({
+const anilloVariantes = {
+  hazard: "border-hazard-400",
+  moss: "border-moss-600",
+  rust: "border-rust-600",
+};
+
+function PlateStat({
   label,
   value,
   restringido,
+  variante,
 }: {
   label: string;
   value: number | null | undefined;
   restringido?: boolean;
+  variante: "hazard" | "moss" | "rust";
 }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5">
-      <p className="text-sm text-gray-500">{label}</p>
-      {restringido ? (
-        <p className="mt-2 text-sm text-gray-400">Solo visible para ADMIN</p>
-      ) : (
-        <p className="mt-2 text-3xl font-semibold text-gray-900">{value}</p>
-      )}
+    <div className="flex items-center gap-4 rounded-lg border border-concrete-300 bg-concrete-50 p-5">
+      {/* Insignia tipo "corte transversal de disco de peso" */}
+      <div
+        className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-[3px] bg-ink-900 ${anilloVariantes[variante]}`}
+      >
+        {restringido ? (
+          <span className="font-mono text-[10px] text-concrete-300">N/A</span>
+        ) : (
+          <span className="font-display text-2xl font-bold text-concrete-50">{value}</span>
+        )}
+      </div>
+      <div>
+        <p className="text-sm font-medium text-ink-900">{label}</p>
+        {restringido && (
+          <p className="mt-0.5 font-mono text-[11px] text-ink-500">Solo visible para ADMIN</p>
+        )}
+      </div>
     </div>
   );
 }

@@ -12,6 +12,19 @@ import {
   UsuarioResponseDTO,
 } from "@/types";
 import axios from "axios";
+import {
+  input,
+  label as labelClass,
+  buttonPrimary,
+  buttonSecondary,
+  buttonDanger,
+  errorBanner,
+  badgeEstado,
+  tableWrap,
+  tableHead,
+  tableHeadCell,
+  tableRowDivide,
+} from "@/lib/ui";
 
 const ESTADOS: EstadoSuscripcion[] = ["ACTIVA", "VENCIDA", "CANCELADA"];
 
@@ -36,7 +49,6 @@ export default function SuscripcionesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Datos para el formulario de creación
   const [usuarios, setUsuarios] = useState<UsuarioResponseDTO[]>([]);
   const [planes, setPlanes] = useState<PlanResponseDTO[]>([]);
   const [mostrarForm, setMostrarForm] = useState(false);
@@ -48,17 +60,17 @@ export default function SuscripcionesPage() {
   const [guardando, setGuardando] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  // Acción de cancelar
   const [cancelandoId, setCancelandoId] = useState<number | null>(null);
 
   async function cargarSuscripciones() {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get<SuscripcionResponseDTO[]>("/suscripciones", {
+      // El backend devuelve Page<SuscripcionResponseDTO> desde la paginación (3.3).
+      const res = await api.get<{ content: SuscripcionResponseDTO[] }>("/suscripciones", {
         params: filtroEstado ? { estado: filtroEstado } : {},
       });
-      setSuscripciones(res.data);
+      setSuscripciones(res.data.content);
     } catch (err) {
       setError("No se pudieron cargar las suscripciones.");
       console.error(err);
@@ -77,14 +89,14 @@ export default function SuscripcionesPage() {
     setForm({ usuarioId: 0, planId: 0, fechaInicio: hoyISO() });
     setMostrarForm(true);
 
-    // Cargar todos los usuarios (cualquier rol puede tener una suscripción) y planes activos
     try {
+      // Ambos endpoints devuelven Page<T> desde la paginación (3.3).
       const [usuariosRes, planesRes] = await Promise.all([
-        api.get<UsuarioResponseDTO[]>("/usuarios"),
-        api.get<PlanResponseDTO[]>("/planes", { params: { activo: true } }),
+        api.get<{ content: UsuarioResponseDTO[] }>("/usuarios"),
+        api.get<{ content: PlanResponseDTO[] }>("/planes", { params: { activo: true } }),
       ]);
-      setUsuarios(usuariosRes.data);
-      setPlanes(planesRes.data);
+      setUsuarios(usuariosRes.data.content);
+      setPlanes(planesRes.data.content);
     } catch (err) {
       console.error(err);
       setFormError("No se pudieron cargar usuarios/planes para el formulario.");
@@ -136,25 +148,25 @@ export default function SuscripcionesPage() {
     }
   }
 
-  const estadoBadge: Record<EstadoSuscripcion, string> = {
-    ACTIVA: "bg-green-100 text-green-700",
-    VENCIDA: "bg-yellow-100 text-yellow-700",
-    CANCELADA: "bg-gray-100 text-gray-500",
+  const estadoVariante: Record<EstadoSuscripcion, "moss" | "hazard" | "neutral"> = {
+    ACTIVA: "moss",
+    VENCIDA: "hazard",
+    CANCELADA: "neutral",
   };
 
   if (!autorizado) {
-    return <p className="text-sm text-gray-500">Verificando acceso...</p>;
+    return <p className="font-mono text-sm text-ink-500">Verificando acceso...</p>;
   }
 
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-gray-900">Suscripciones</h1>
+        <h1 className="font-display text-3xl font-bold text-ink-900">Suscripciones</h1>
         <div className="flex gap-2">
           <select
             value={filtroEstado}
             onChange={(e) => setFiltroEstado(e.target.value as EstadoSuscripcion | "")}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
+            className={`${input} w-auto`}
           >
             <option value="">Todos los estados</option>
             {ESTADOS.map((e) => (
@@ -163,58 +175,49 @@ export default function SuscripcionesPage() {
               </option>
             ))}
           </select>
-          <button
-            onClick={abrirCrear}
-            className="rounded-md bg-gray-900 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-gray-800"
-          >
+          <button onClick={abrirCrear} className={buttonPrimary}>
             + Nueva suscripción
           </button>
         </div>
       </div>
 
-      {error && (
-        <p className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
-      )}
+      {error && <p className={`mb-4 ${errorBanner}`}>{error}</p>}
 
       {loading ? (
-        <p className="text-sm text-gray-500">Cargando suscripciones...</p>
+        <p className="font-mono text-sm text-ink-500">Cargando suscripciones...</p>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-gray-200 bg-gray-50 text-gray-500">
+        <div className={tableWrap}>
+          <table className="w-full min-w-[720px] text-left text-sm">
+            <thead className={tableHead}>
               <tr>
-                <th className="px-4 py-3 font-medium">Usuario</th>
-                <th className="px-4 py-3 font-medium">Plan</th>
-                <th className="px-4 py-3 font-medium">Inicio</th>
-                <th className="px-4 py-3 font-medium">Fin</th>
-                <th className="px-4 py-3 font-medium">Estado</th>
-                <th className="px-4 py-3 font-medium"></th>
+                <th className={tableHeadCell}>Usuario</th>
+                <th className={tableHeadCell}>Plan</th>
+                <th className={tableHeadCell}>Inicio</th>
+                <th className={tableHeadCell}>Fin</th>
+                <th className={tableHeadCell}>Estado</th>
+                <th className={tableHeadCell}></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className={tableRowDivide}>
               {suscripciones.map((s) => (
                 <tr key={s.id}>
-                  <td className="px-4 py-3 text-gray-900">{s.nombreUsuario}</td>
-                  <td className="px-4 py-3 text-gray-600">{s.nombrePlan}</td>
-                  <td className="px-4 py-3 text-gray-500">
+                  <td className="px-4 py-3 text-ink-900">{s.nombreUsuario}</td>
+                  <td className="px-4 py-3 text-ink-700">{s.nombrePlan}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-ink-500">
                     {new Date(s.fechaInicio).toLocaleDateString("es-CO")}
                   </td>
-                  <td className="px-4 py-3 text-gray-500">
+                  <td className="px-4 py-3 font-mono text-xs text-ink-500">
                     {new Date(s.fechaFin).toLocaleDateString("es-CO")}
                   </td>
                   <td className="px-4 py-3">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${estadoBadge[s.estado]}`}
-                    >
-                      {s.estado}
-                    </span>
+                    <span className={badgeEstado(estadoVariante[s.estado])}>{s.estado}</span>
                   </td>
                   <td className="px-4 py-3 text-right">
                     {s.estado === "ACTIVA" && (
                       <button
                         onClick={() => cancelar(s.id)}
                         disabled={cancelandoId === s.id}
-                        className="rounded-md border border-gray-300 px-3 py-1 text-xs text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
+                        className={buttonDanger}
                       >
                         {cancelandoId === s.id ? "..." : "Cancelar"}
                       </button>
@@ -226,7 +229,7 @@ export default function SuscripcionesPage() {
           </table>
 
           {suscripciones.length === 0 && (
-            <p className="px-4 py-6 text-center text-sm text-gray-500">
+            <p className="px-4 py-6 text-center font-mono text-sm text-ink-500">
               No hay suscripciones con ese filtro.
             </p>
           )}
@@ -234,18 +237,20 @@ export default function SuscripcionesPage() {
       )}
 
       {mostrarForm && (
-        <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/30 px-4">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg">
-            <h2 className="mb-4 text-lg font-semibold text-gray-900">Nueva suscripción</h2>
+        <div className="fixed inset-0 z-10 flex items-center justify-center bg-ink-900/60 px-4">
+          <div className="w-full max-w-md rounded-lg border border-concrete-300 bg-concrete-50 p-6 shadow-xl">
+            <h2 className="mb-4 font-display text-2xl font-bold text-ink-900">
+              Nueva suscripción
+            </h2>
 
             <form onSubmit={handleSubmit} className="space-y-3">
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Usuario</label>
+                <label className={labelClass}>Usuario</label>
                 <select
                   required
                   value={form.usuarioId || ""}
                   onChange={(e) => setForm({ ...form, usuarioId: Number(e.target.value) })}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
+                  className={input}
                 >
                   <option value="">Selecciona un usuario</option>
                   {usuarios.map((u) => (
@@ -255,19 +260,19 @@ export default function SuscripcionesPage() {
                   ))}
                 </select>
                 {usuarios.length === 0 && (
-                  <p className="mt-1 text-xs text-gray-400">
+                  <p className="mt-1 font-mono text-xs text-ink-500">
                     No hay usuarios registrados.
                   </p>
                 )}
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Plan</label>
+                <label className={labelClass}>Plan</label>
                 <select
                   required
                   value={form.planId || ""}
                   onChange={(e) => setForm({ ...form, planId: Number(e.target.value) })}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
+                  className={input}
                 >
                   <option value="">Selecciona un plan</option>
                   {planes.map((p) => (
@@ -279,35 +284,23 @@ export default function SuscripcionesPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">
-                  Fecha de inicio
-                </label>
+                <label className={labelClass}>Fecha de inicio</label>
                 <input
                   type="date"
                   required
                   value={form.fechaInicio}
                   onChange={(e) => setForm({ ...form, fechaInicio: e.target.value })}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
+                  className={input}
                 />
               </div>
 
-              {formError && (
-                <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{formError}</p>
-              )}
+              {formError && <p className={errorBanner}>{formError}</p>}
 
               <div className="flex gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={cerrarForm}
-                  className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-50"
-                >
+                <button type="button" onClick={cerrarForm} className={`flex-1 ${buttonSecondary}`}>
                   Cancelar
                 </button>
-                <button
-                  type="submit"
-                  disabled={guardando}
-                  className="flex-1 rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-gray-800 disabled:opacity-50"
-                >
+                <button type="submit" disabled={guardando} className={`flex-1 ${buttonPrimary}`}>
                   {guardando ? "Guardando..." : "Crear"}
                 </button>
               </div>

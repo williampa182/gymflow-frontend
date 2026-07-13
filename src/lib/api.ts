@@ -1,28 +1,23 @@
 import axios from "axios";
 
+// Ya no apunta directo al backend: pasa por nuestro proxy en /api/backend,
+// que es el único que puede leer la cookie httpOnly con el JWT y adjuntarla
+// como Authorization header. El navegador nunca maneja el token directamente.
 const api = axios.create({
-  baseURL: "http://localhost:8080/api",
+  baseURL: "/api/backend",
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Interceptor: agrega el JWT a cada request si existe
-api.interceptors.request.use((config) => {
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-  if (token && config.headers) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+// La cookie "token" viaja automáticamente en cada request del mismo origen,
+// así que ya no hace falta un interceptor que la agregue manualmente.
 
-// Interceptor de respuesta: si el token expiró (401), redirige a login
+// Interceptor de respuesta: si el token expiró o es inválido (401), redirige a login.
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401 && typeof window !== "undefined") {
-      localStorage.removeItem("token");
-      localStorage.removeItem("rol");
       window.location.href = "/login";
     }
     return Promise.reject(error);
