@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   build:
-    name: Lint y build
+    name: Lint, test y build
     runs-on: ubuntu-latest
 
     steps:
@@ -33,6 +33,11 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+      - name: Tests unitarios (Vitest + RTL)
+        # Corre antes del build para fallar rápido si una regresión rompe
+        # el contrato frontend↔backend (ej. array → Page<T> del 13/07).
+        run: npm run test
 
       - name: Build de producción
         run: npm run build

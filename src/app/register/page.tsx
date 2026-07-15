@@ -3,13 +3,17 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { LoginRequest } from "@/types";
+import { RegisterRequest } from "@/types";
 import { input, buttonPrimary, errorBanner } from "@/lib/ui";
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
 
-  const [form, setForm] = useState<LoginRequest>({ email: "", password: "" });
+  const [form, setForm] = useState<RegisterRequest>({
+    nombre: "",
+    email: "",
+    password: "",
+  });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -20,24 +24,35 @@ export default function LoginPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (form.password.length < 12) {
+      setError("La contraseña debe tener al menos 12 caracteres.");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
 
       if (!res.ok) {
-        if (res.status === 401 || res.status === 403) {
-          setError("Email o contraseña incorrectos.");
-        } else if (res.status === 429) {
+        if (res.status === 409) {
+          setError("Ese email ya está registrado.");
+        } else if (res.status === 400) {
           const data = await res.json().catch(() => null);
-          setError(data?.message ?? "Demasiados intentos. Espera un momento.");
+          setError(
+            data?.message ??
+              "Revisa los datos: el nombre, email y contraseña son obligatorios."
+          );
         } else {
           const data = await res.json().catch(() => null);
-          setError(data?.message ?? "No se pudo conectar con el servidor. Intenta de nuevo.");
+          setError(
+            data?.message ?? "No se pudo completar el registro. Intenta de nuevo."
+          );
         }
         return;
       }
@@ -59,7 +74,7 @@ export default function LoginPage() {
             GYMFLOW
           </span>
           <p className="mt-2 font-mono text-xs uppercase tracking-widest text-hazard-400">
-            Panel de control
+            Crear cuenta
           </p>
         </div>
 
@@ -67,7 +82,30 @@ export default function LoginPage() {
           <div className="hazard-stripe h-1.5" />
           <form onSubmit={handleSubmit} className="space-y-4 p-8">
             <div>
-              <label htmlFor="email" className="mb-1 block text-sm font-semibold text-concrete-100">
+              <label
+                htmlFor="nombre"
+                className="mb-1 block text-sm font-semibold text-concrete-100"
+              >
+                Nombre
+              </label>
+              <input
+                id="nombre"
+                name="nombre"
+                type="text"
+                autoComplete="name"
+                required
+                value={form.nombre}
+                onChange={handleChange}
+                className={input}
+                placeholder="Tu nombre completo"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="email"
+                className="mb-1 block text-sm font-semibold text-concrete-100"
+              >
                 Email
               </label>
               <input
@@ -84,32 +122,39 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="mb-1 block text-sm font-semibold text-concrete-100">
+              <label
+                htmlFor="password"
+                className="mb-1 block text-sm font-semibold text-concrete-100"
+              >
                 Contraseña
               </label>
               <input
                 id="password"
                 name="password"
                 type="password"
-                autoComplete="current-password"
+                autoComplete="new-password"
                 required
+                minLength={12}
                 value={form.password}
                 onChange={handleChange}
                 className={input}
-                placeholder="••••••••"
+                placeholder="Mínimo 12 caracteres"
               />
+              <p className="mt-1 text-xs text-concrete-400">
+                Mínimo 12 caracteres. Evita contraseñas comunes.
+              </p>
             </div>
 
             {error && <p className={errorBanner}>{error}</p>}
 
             <button type="submit" disabled={loading} className={`${buttonPrimary} w-full`}>
-              {loading ? "Ingresando..." : "Ingresar"}
+              {loading ? "Creando cuenta..." : "Crear cuenta"}
             </button>
 
             <p className="text-center text-sm text-concrete-400">
-              ¿No tienes cuenta?{" "}
-              <Link href="/register" className="font-medium text-hazard-400 hover:underline">
-                Regístrate
+              ¿Ya tienes cuenta?{" "}
+              <Link href="/login" className="font-medium text-hazard-400 hover:underline">
+                Inicia sesión
               </Link>
             </p>
           </form>
