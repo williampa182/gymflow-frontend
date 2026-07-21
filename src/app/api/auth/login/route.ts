@@ -39,13 +39,14 @@ export async function POST(request: NextRequest) {
     maxAge: TOKEN_MAX_AGE_SECONDS,
   });
 
-  // Cookie con datos NO sensibles, legible por el cliente (para mostrar nombre/rol
-  // en la UI y para que el middleware pueda filtrar rutas por rol sin decodificar el JWT).
+  // Cookie con datos de sesión. §1: httpOnly=true — antes era false y se
+  // leía via document.cookie (manipulable por XSS). Ahora el client-side
+  // la lee vía GET /api/auth/session (server-side), no directamente.
   response.cookies.set(
     "session",
     JSON.stringify({ id, nombre, email, rol }),
     {
-      httpOnly: false,
+      httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",

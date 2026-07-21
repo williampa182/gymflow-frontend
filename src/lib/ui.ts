@@ -21,6 +21,11 @@ export const buttonDanger =
 export const errorBanner =
   "rounded-md border border-rust-600/30 bg-rust-100 px-4 py-3 text-sm text-rust-700";
 
+// Variante oscura de errorBanner para pantallas de auth (login/registro),
+// que usan fondo ink en vez del fondo claro del resto de la app.
+export const authErrorBanner =
+  "rounded-md border border-rust-600/50 bg-rust-700/20 px-4 py-3 text-sm font-medium text-rust-100";
+
 // Badges de estado — moss (activo/positivo), rust (peligro/cancelado),
 // hazard (advertencia/vencido), concrete (neutral)
 export function badgeEstado(variante: "moss" | "rust" | "hazard" | "neutral") {

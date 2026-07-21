@@ -101,6 +101,95 @@ body {
   );
 }
 
+/* Input oscuro para pantallas de auth (login/registro) — misma lógica de
+   input-plate pero invertida para fondo ink, con inset shadow real en vez
+   de un simple borde plano. */
+.auth-input {
+  background: var(--color-ink-900);
+  border: 1px solid var(--color-ink-700);
+  color: var(--color-concrete-50);
+  box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.5);
+}
+.auth-input::placeholder {
+  color: var(--color-ink-500);
+}
+.auth-input:focus {
+  border-color: var(--color-hazard-400);
+  outline: 2px solid var(--color-hazard-400);
+  outline-offset: -1px;
+}
+.auth-input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.auth-input:-webkit-autofill,
+.auth-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--color-concrete-50);
+  box-shadow: 0 0 0 1000px var(--color-ink-900) inset;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+/* Botón primario de auth — sombra dura tipo metal estampado, no la sombra
+   difusa que usa el resto de la app (buttonPrimary de lib/ui.ts). */
+.auth-button-primary {
+  background: var(--color-hazard-400);
+  color: var(--color-ink-900);
+  box-shadow: 4px 4px 0 0 rgba(0, 0, 0, 0.6);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
+}
+.auth-button-primary:hover:not(:disabled) {
+  background: var(--color-hazard-500);
+}
+.auth-button-primary:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 0.6);
+}
+.auth-button-primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Remaches decorativos en las esquinas de la tarjeta de auth — detalle de
+   identidad "sala de máquinas" sin depender de íconos externos. */
+.rivet {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--color-ink-500);
+  box-shadow:
+    inset 1px 1px 1px rgba(255, 255, 255, 0.15),
+    inset -1px -1px 1px rgba(0, 0, 0, 0.6);
+}
+
+/* Distorsión cromática sutil tipo CRT/glitch para el logo GYMFLOW — se usa
+   en login, registro y sidebar, siempre igual, para que la marca sea
+   consistente en toda la app. */
+.brand-glitch {
+  text-shadow:
+    1.5px 0 0 rgba(255, 0, 60, 0.55),
+    -1.5px 0 0 rgba(0, 220, 255, 0.55);
+}
+
+/* Franja hazard vertical fina, para el borde de contenedores anchos como
+   el sidebar — misma lógica que hazard-stripe pero orientada al borde. */
+.hazard-edge-r {
+  position: relative;
+}
+.hazard-edge-r::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 3px;
+  background-image: repeating-linear-gradient(
+    180deg,
+    var(--color-hazard-400) 0 8px,
+    var(--color-ink-900) 8px 16px
+  );
+}
+
 /* Marquee infinito tipo "barra de peso" — el contenido se duplica en el
    markup y el keyframe traslada −50%, creando un loop visual sin saltos.
    display: flex + width: max-content garantiza que el punto de reinicio

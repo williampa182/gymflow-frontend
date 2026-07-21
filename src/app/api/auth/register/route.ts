@@ -43,7 +43,9 @@ export async function POST(request: NextRequest) {
   });
 
   response.cookies.set("session", JSON.stringify({ id, nombre, email, rol }), {
-    httpOnly: false,
+    // §1: httpOnly=true — antes era false y se leía via document.cookie.
+    // Ahora el client-side lee vía GET /api/auth/session.
+    httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
