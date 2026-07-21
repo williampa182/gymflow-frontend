@@ -100,3 +100,22 @@ body {
     var(--color-ink-900) 10px 20px
   );
 }
+
+/* Marquee infinito tipo "barra de peso" — el contenido se duplica en el
+   markup y el keyframe traslada −50%, creando un loop visual sin saltos.
+   display: flex + width: max-content garantiza que el punto de reinicio
+   sea exactamente el ancho de un bloque de contenido. */
+@keyframes barbell-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.barbell-marquee {
+  display: flex;
+  width: max-content;
+  animation: barbell-scroll 23s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .barbell-marquee {
+    animation: none;
+  }
+}
