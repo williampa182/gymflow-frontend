@@ -1,8 +1,12 @@
 // Clases compartidas del sistema de diseño "sala de máquinas" de GymFlow.
 // Centralizarlas aquí evita que cada página reinvente su propio botón o badge.
 
+// Franja hazard arriba: mismo acento de color que usan login/registro
+// (.hazard-stripe) pero como línea sólida, no diagonal — la diagonal
+// repetida se reserva para las "franjas de peligro" físicas de auth;
+// aquí es solo un acento de color, discreto en tablas/tarjetas anchas.
 export const card =
-  "rounded-lg border border-concrete-300 bg-concrete-50 p-5";
+  "rounded-lg border border-concrete-300 border-t-4 border-t-hazard-400 bg-concrete-50 p-5";
 
 export const input =
   "input-plate w-full rounded-md px-3 py-2 text-sm text-ink-900 outline-none";
@@ -39,7 +43,19 @@ export function badgeEstado(variante: "moss" | "rust" | "hazard" | "neutral") {
   return `${base} ${variantes[variante]}`;
 }
 
-export const tableWrap = "overflow-x-auto rounded-lg border border-concrete-300 bg-concrete-50";
+export const tableWrap =
+  "overflow-x-auto rounded-lg border border-concrete-300 border-t-4 border-t-hazard-400 bg-concrete-50";
+
+// ─── Paneles de decisión (modales de crear/editar) ─────────────────
+// Vocabulario "hardware" reservado para momentos donde el usuario actúa
+// sobre datos (crear suscripción, editar plan) — mismo lenguaje físico
+// que las tarjetas de login/registro (esquina recta, borde grueso, sombra
+// dura desplazada, remaches), calibrado para superficie clara en vez de
+// ink. No usar en superficies de solo lectura: para esas, `card` y
+// `tableWrap` ya llevan su propio acento (franja hazard superior).
+export const modalPanel =
+  "relative w-full max-w-md overflow-hidden rounded-none border-2 border-concrete-300 bg-concrete-50 shadow-[6px_6px_0_0_rgba(28,29,32,0.18)]";
+export const modalBody = "p-6";
 export const tableHead = "border-b border-concrete-300 bg-concrete-100 text-ink-500";
 export const tableHeadCell = "px-4 py-3 font-medium";
 export const tableRowDivide = "divide-y divide-concrete-200";

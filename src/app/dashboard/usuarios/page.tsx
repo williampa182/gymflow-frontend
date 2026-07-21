@@ -115,7 +115,7 @@ export default function UsuariosPage() {
             </thead>
             <tbody className={tableRowDivide}>
               {usuarios.map((u) => (
-                <tr key={u.id}>
+                <tr key={u.id} className="transition-colors hover:bg-concrete-100/70">
                   <td className="px-4 py-3 text-ink-900">{u.nombre}</td>
                   <td className="px-4 py-3 font-mono text-xs text-ink-500">{u.email}</td>
                   <td className="px-4 py-3">

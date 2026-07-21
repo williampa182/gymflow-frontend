@@ -13,6 +13,8 @@ import {
   buttonSecondary,
   errorBanner,
   badgeEstado,
+  modalPanel,
+  modalBody,
 } from "@/lib/ui";
 
 const TIPOS: TipoPlan[] = ["MENSUAL", "TRIMESTRAL", "SEMESTRAL", "ANUAL"];
@@ -194,7 +196,14 @@ export default function PlanesPage() {
 
       {mostrarForm && (
         <div className="fixed inset-0 z-10 flex items-center justify-center bg-ink-900/60 px-4">
-          <div className="w-full max-w-md rounded-lg border border-concrete-300 bg-concrete-50 p-6 shadow-xl">
+          <div className={modalPanel}>
+            <span className="rivet-light left-3 top-3" />
+            <span className="rivet-light right-3 top-3" />
+            <span className="rivet-light bottom-3 left-3" />
+            <span className="rivet-light bottom-3 right-3" />
+            <div className="hazard-stripe h-1" />
+
+            <div className={modalBody}>
             <h2 className="mb-4 font-display text-2xl font-bold text-ink-900">
               {editandoId ? "Editar plan" : "Nuevo plan"}
             </h2>
@@ -318,6 +327,7 @@ export default function PlanesPage() {
                 </button>
               </div>
             </form>
+            </div>
           </div>
         </div>
       )}

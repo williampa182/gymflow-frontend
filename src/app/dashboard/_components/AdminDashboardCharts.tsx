@@ -79,9 +79,9 @@ function ChartTooltip({
 }
 
 const moneda = (v: number) =>
-  v.toLocaleString("es-AR", {
+  v.toLocaleString("es-CO", {
     style: "currency",
-    currency: "ARS",
+    currency: "COP",
     maximumFractionDigits: 0,
   });
 

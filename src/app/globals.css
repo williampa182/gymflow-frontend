@@ -162,6 +162,21 @@ body {
     inset -1px -1px 1px rgba(0, 0, 0, 0.6);
 }
 
+/* Remaches para superficies claras (modales del dashboard) — misma pieza
+   física que .rivet, pero brillo/sombra recalibrados: contra el concreto
+   claro, el inset blanco de .rivet original es casi invisible y el negro
+   se ve como suciedad en vez de profundidad. */
+.rivet-light {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--color-concrete-300);
+  box-shadow:
+    inset 1px 1px 1px rgba(255, 255, 255, 0.7),
+    inset -1px -1px 1px rgba(28, 29, 32, 0.35);
+}
+
 /* Distorsión cromática sutil tipo CRT/glitch para el logo GYMFLOW — se usa
    en login, registro y sidebar, siempre igual, para que la marca sea
    consistente en toda la app. */
