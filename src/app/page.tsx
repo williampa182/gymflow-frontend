@@ -180,11 +180,11 @@ export default async function Home() {
       <section className="relative bg-rubber-floor px-4 py-16 sm:px-6 md:py-20">
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="font-display text-3xl font-bold text-concrete-50 sm:text-4xl">
-            ¿Listo para poner orden en tu gimnasio?
+            ¿Listo para probarlo vos mismo?
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-concrete-300">
-            Accedé al sistema y empezá a gestionar planes, usuarios y
-            suscripciones desde un solo lugar.
+            Ingresá con tu usuario y gestioná planes, suscripciones y
+            usuarios desde el panel.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
