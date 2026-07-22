@@ -27,7 +27,7 @@ export default async function Home() {
           </Link>
           <Link
             href="/register"
-            className={`${buttonSecondary} font-semibold bg-ink-700 border-hazard-400/30 text-concrete-50 hover:border-hazard-400 hover:text-hazard-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hazard-400`}
+            className={`${buttonSecondary} font-semibold bg-ink-700 border-hazard-400/30 text-concrete-50! hover:bg-ink-700! hover:border-hazard-400 hover:text-hazard-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hazard-400`}
           >
             Crear cuenta
           </Link>
@@ -91,7 +91,7 @@ export default async function Home() {
             </Link>
             <Link
               href="/register"
-              className={`${buttonSecondary} font-semibold bg-ink-700 border-hazard-400/30 text-concrete-50 hover:border-hazard-400 hover:text-hazard-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hazard-400`}
+              className={`${buttonSecondary} font-semibold bg-ink-700 border-hazard-400/30 text-concrete-50! hover:bg-ink-700! hover:border-hazard-400 hover:text-hazard-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hazard-400`}
             >
               Crear cuenta
             </Link>
@@ -195,7 +195,7 @@ export default async function Home() {
             </Link>
             <Link
               href="/register"
-              className={`${buttonSecondary} font-semibold bg-ink-700 border-hazard-400/30 text-concrete-50 hover:border-hazard-400 hover:text-hazard-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hazard-400`}
+              className={`${buttonSecondary} font-semibold bg-ink-700 border-hazard-400/30 text-concrete-50! hover:bg-ink-700! hover:border-hazard-400 hover:text-hazard-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hazard-400`}
             >
               Registrarse
             </Link>
