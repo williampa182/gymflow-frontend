@@ -6,8 +6,9 @@ import path from "node:path";
 // (pasó en esta máquina), React carga el build de producción, que no
 // exporta `act` — @testing-library/react lo necesita y revienta con
 // "React.act is not a function". Forzamos "test" acá para no depender
-// de la configuración del entorno de quien corra los tests.
-process.env.NODE_ENV = "test";
+// de la configuración del entorno de quien corra los tests. Next.js
+// tipa NODE_ENV como readonly, así que casteamos para poder asignarlo.
+(process.env as Record<string, string>).NODE_ENV = "test";
 
 // Configuración de Vitest para el frontend de GymFlow.
 // Miramos el alias `@/*` del tsconfig.json para que los imports del código
