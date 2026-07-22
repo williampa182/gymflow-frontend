@@ -27,9 +27,18 @@ export default async function Home() {
           </Link>
           <Link
             href="/register"
-            className="rounded-md border border-concrete-300/30 bg-ink-800/60 px-3 py-1.5 text-sm font-semibold text-concrete-50 transition hover:border-hazard-400 hover:text-hazard-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hazard-400"
+            className={`${buttonSecondary} font-semibold bg-ink-700 border-hazard-400/30 text-concrete-50 hover:border-hazard-400 hover:text-hazard-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hazard-400`}
           >
             Crear cuenta
+          </Link>
+          <Link
+            href="https://github.com/williampa182"
+            className="text-sm font-semibold text-concrete-300 transition hover:text-hazard-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hazard-400"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Ver código en GitHub"
+          >
+            GitHub
           </Link>
         </div>
       </nav>
@@ -82,7 +91,7 @@ export default async function Home() {
             </Link>
             <Link
               href="/register"
-              className={`${buttonSecondary} border-concrete-300/30 bg-ink-800/60 text-concrete-50 hover:border-hazard-400 hover:text-hazard-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hazard-400`}
+              className={`${buttonSecondary} font-semibold bg-ink-700 border-hazard-400/30 text-concrete-50 hover:border-hazard-400 hover:text-hazard-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hazard-400`}
             >
               Crear cuenta
             </Link>
@@ -186,7 +195,7 @@ export default async function Home() {
             </Link>
             <Link
               href="/register"
-              className={`${buttonSecondary} border-concrete-300/30 bg-ink-800/60 text-concrete-50 hover:border-hazard-400 hover:text-hazard-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hazard-400`}
+              className={`${buttonSecondary} font-semibold bg-ink-700 border-hazard-400/30 text-concrete-50 hover:border-hazard-400 hover:text-hazard-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hazard-400`}
             >
               Registrarse
             </Link>
