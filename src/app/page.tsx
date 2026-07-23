@@ -148,7 +148,7 @@ export default async function Home() {
         <div className="mx-auto max-w-3xl">
           <header className="mb-10 text-center">
             <h2 className="font-display text-2xl font-bold text-concrete-50 sm:text-3xl">
-              Especificaciones técnicas
+              Decisiones técnicas
             </h2>
             <p className="mt-2 font-mono text-sm text-ink-500">
               Lo que hay debajo del capó.
@@ -166,11 +166,22 @@ export default async function Home() {
             <div className="absolute top-0 left-0 right-0 h-1 hazard-stripe" />
 
             <ul className="space-y-4 pt-2">
-              <SpecRow label="STACK" value="Next.js · Spring Boot · PostgreSQL" />
-              <SpecRow label="AUTH" value="JWT · HTTP-only cookies · RBAC" />
-              <SpecRow label="ROLES" value="Admin · Entrenador · Cliente" />
-              <SpecRow label="API" value="REST proxy con rate limiting" />
-              <SpecRow label="TESTS" value="18 passing" />
+              <SpecRow
+                label="AUTH"
+                value="JWT en cookie HTTP-only (en vez de localStorage) para mitigar XSS, impidiendo que el JavaScript del navegador acceda al token."
+              />
+              <SpecRow
+                label="RATE LIMIT"
+                value="Redis en el login para proteger contra fuerza bruta y permitir compartir el estado entre instancias si el backend escala horizontalmente."
+              />
+              <SpecRow
+                label="ROLES"
+                value="Control de acceso (ADMIN / ENTRENADOR / CLIENTE) validado strictly en el backend, sin confiar en lo que la UI oculte o muestre."
+              />
+              <SpecRow
+                label="PROXY"
+                value="Proxy REST desde el frontend hacia el backend para evitar exponer la URL y puerto real del servidor al navegador."
+              />
             </ul>
           </div>
         </div>
@@ -302,11 +313,13 @@ function FeaturePanel({
 
 function SpecRow({ label, value }: { label: string; value: string }) {
   return (
-    <li className="flex flex-col gap-1 border-b border-ink-700/50 pb-3 last:border-0 last:pb-0 sm:flex-row sm:items-center sm:gap-4">
-      <span className="w-20 shrink-0 font-mono text-xs font-medium uppercase tracking-wider text-hazard-400">
+    <li className="flex flex-col gap-1 border-b border-ink-700/50 pb-3.5 last:border-0 last:pb-0 sm:flex-row sm:items-start sm:gap-4">
+      <span className="w-28 shrink-0 font-mono text-xs font-medium uppercase tracking-wider text-hazard-400 sm:pt-0.5">
         {label}
       </span>
-      <span className="font-mono text-sm text-concrete-300">{value}</span>
+      <span className="font-mono text-sm leading-relaxed text-concrete-300">
+        {value}
+      </span>
     </li>
   );
 }
