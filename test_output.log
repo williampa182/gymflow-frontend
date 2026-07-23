@@ -1,0 +1,412 @@
+﻿
+> gymflow-frontend@0.1.0 test
+> vitest run
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90mC:/proyectos/gymflow/gymflow-frontend[39m
+
+ [31mÔØ»[39m src/app/dashboard/usuarios/page.test.tsx [2m([22m[2m4 tests[22m[2m | [22m[31m4 failed[39m[2m)[22m[32m 26[2mms[22m[39m
+[31m     [31m├ù[31m renderiza la lista de usuarios cuando el backend devuelve Page<UsuarioResponseDTO>[39m[32m 13[2mms[22m[39m
+[31m     [31m├ù[31m PREVENCI├ôN DE REGRESI├ôN: detecta si alguien rompe el contrato Page<T>[39m[32m 3[2mms[22m[39m
+[31m     [31m├ù[31m maneja respuesta vac├¡a sin crashear[39m[32m 2[2mms[22m[39m
+[31m     [31m├ù[31m muestra mensaje de error si el backend falla[39m[32m 2[2mms[22m[39m
+ [31mÔØ»[39m src/app/dashboard/page.test.tsx [2m([22m[2m6 tests[22m[2m | [22m[31m6 failed[39m[2m)[22m[32m 31[2mms[22m[39m
+[31m     [31m├ù[31m renderiza los tres PlateStat con totalElements cuando el backend devuelve Page<T>[39m[32m 13[2mms[22m[39m
+[31m     [31m├ù[31m PREVENCI├ôN DE REGRESI├ôN: detecta si alguien rompe el contrato Page<T>[39m[32m 3[2mms[22m[39m
+[31m     [31m├ù[31m muestra AdminDashboardCharts solo para ADMIN[39m[32m 2[2mms[22m[39m
+[31m     [31m├ù[31m muestra 'N/A' en los PlateStat restringidos y NO llama a /usuarios ni /suscripciones[39m[32m 2[2mms[22m[39m
+[31m     [31m├ù[31m NO renderiza AdminDashboardCharts para CLIENTE[39m[32m 3[2mms[22m[39m
+[31m     [31m├ù[31m muestra mensaje de error si el backend falla[39m[32m 2[2mms[22m[39m
+ [31mÔØ»[39m src/app/dashboard/planes/page.test.tsx [2m([22m[2m4 tests[22m[2m | [22m[31m4 failed[39m[2m)[22m[32m 18[2mms[22m[39m
+[31m     [31m├ù[31m renderiza la lista de planes cuando el backend devuelve Page<PlanResponseDTO>[39m[32m 9[2mms[22m[39m
+[31m     [31m├ù[31m PREVENCI├ôN DE REGRESI├ôN: detecta si alguien rompe el contrato Page<T>[39m[32m 2[2mms[22m[39m
+[31m     [31m├ù[31m maneja respuesta vac├¡a sin crashear[39m[32m 2[2mms[22m[39m
+[31m     [31m├ù[31m muestra mensaje de error si el backend falla[39m[32m 1[2mms[22m[39m
+ [31mÔØ»[39m src/app/dashboard/suscripciones/page.test.tsx [2m([22m[2m4 tests[22m[2m | [22m[31m4 failed[39m[2m)[22m[32m 18[2mms[22m[39m
+[31m     [31m├ù[31m renderiza la lista de suscripciones cuando el backend devuelve Page<SuscripcionResponseDTO>[39m[32m 9[2mms[22m[39m
+[31m     [31m├ù[31m PREVENCI├ôN DE REGRESI├ôN: detecta si alguien rompe el contrato Page<T>[39m[32m 2[2mms[22m[39m
+[31m     [31m├ù[31m maneja respuesta vac├¡a sin crashear[39m[32m 2[2mms[22m[39m
+[31m     [31m├ù[31m muestra mensaje de error si el backend falla[39m[32m 2[2mms[22m[39m
+node.exe : 
+En línea: 1 Carácter: 1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[31mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[39m[1m[41m Failed Tests 18 [49m[22m[31mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[39m
+
+[41m[1m FAIL [22m[49m src/app/dashboard/page.test.tsx[2m > [22mdashboard/page.tsx ÔÇö rol ADMIN[2m > 
+[22mrenderiza los tres PlateStat con totalElements cuando el backend devuelve Page<T>
+[31m[1mTypeError[22m: React.act is not a function[39m
+[90m [2mÔØ»[22m exports.act node_modules/react-dom/cjs/react-dom-test-utils.production.js:[2m20:16[22m[39m
+[90m [2mÔØ»[22m node_modules/@testing-library/react/dist/act-compat.js:[2m46:25[22m[39m
+[90m [2mÔØ»[22m renderRoot node_modules/@testing-library/react/dist/pure.js:[2m189:26[22m[39m
+[90m [2mÔØ»[22m Proxy.render node_modules/@testing-library/react/dist/pure.js:[2m291:10[22m[39m
+[36m [2mÔØ»[22m src/app/dashboard/page.test.tsx:[2m69:5[22m[39m
+    [90m 67|[39m       .mockResolvedValueOnce(pageTotal(7)); // /suscripciones?estado=AÔÇª
+    [90m 68|[39m
+    [90m 69|[39m     [34mrender[39m([33m<[39m[33mDashboardPage[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m   |[39m     [31m^[39m
+    [90m 70|[39m
+    [90m 71|[39m     [90m// Los 3 n├║meros deben aparecer en el DOM como texto del PlateStat.[39m
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[1/36]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m src/app/dashboard/page.test.tsx[2m > [22mdashboard/page.tsx ÔÇö rol ADMIN[2m > 
+[22mrenderiza los tres PlateStat con totalElements cuando el backend devuelve Page<T>
+[41m[1m FAIL [22m[49m src/app/dashboard/page.test.tsx[2m > [22mdashboard/page.tsx ÔÇö rol ADMIN[2m > 
+[22mPREVENCI├ôN DE REGRESI├ôN: detecta si alguien rompe el contrato Page<T>
+[41m[1m FAIL [22m[49m src/app/dashboard/page.test.tsx[2m > [22mdashboard/page.tsx ÔÇö rol ADMIN[2m > 
+[22mmuestra AdminDashboardCharts solo para ADMIN
+[41m[1m FAIL [22m[49m src/app/dashboard/page.test.tsx[2m > [22mdashboard/page.tsx ÔÇö rol CLIENTE (no-ADMIN)[2m 
+> [22mmuestra 'N/A' en los PlateStat restringidos y NO llama a /usuarios ni /suscripciones
+[41m[1m FAIL [22m[49m src/app/dashboard/page.test.tsx[2m > [22mdashboard/page.tsx ÔÇö rol CLIENTE (no-ADMIN)[2m 
+> [22mNO renderiza AdminDashboardCharts para CLIENTE
+[41m[1m FAIL [22m[49m src/app/dashboard/page.test.tsx[2m > [22mdashboard/page.tsx ÔÇö manejo de errores[2m > 
+[22mmuestra mensaje de error si el backend falla
+[41m[1m FAIL [22m[49m src/app/dashboard/planes/page.test.tsx[2m > [22mdashboard/planes/page.tsx[2m > 
+[22mrenderiza la lista de planes cuando el backend devuelve Page<PlanResponseDTO>
+[41m[1m FAIL [22m[49m src/app/dashboard/planes/page.test.tsx[2m > [22mdashboard/planes/page.tsx[2m > 
+[22mPREVENCI├ôN DE REGRESI├ôN: detecta si alguien rompe el contrato Page<T>
+[41m[1m FAIL [22m[49m src/app/dashboard/planes/page.test.tsx[2m > [22mdashboard/planes/page.tsx[2m > 
+[22mmaneja respuesta vac├¡a sin crashear
+[41m[1m FAIL [22m[49m src/app/dashboard/planes/page.test.tsx[2m > [22mdashboard/planes/page.tsx[2m > 
+[22mmuestra mensaje de error si el backend falla
+[41m[1m FAIL [22m[49m src/app/dashboard/usuarios/page.test.tsx[2m > [22mdashboard/usuarios/page.tsx[2m > 
+[22mrenderiza la lista de usuarios cuando el backend devuelve Page<UsuarioResponseDTO>
+[41m[1m FAIL [22m[49m src/app/dashboard/usuarios/page.test.tsx[2m > [22mdashboard/usuarios/page.tsx[2m > 
+[22mPREVENCI├ôN DE REGRESI├ôN: detecta si alguien rompe el contrato Page<T>
+[41m[1m FAIL [22m[49m src/app/dashboard/usuarios/page.test.tsx[2m > [22mdashboard/usuarios/page.tsx[2m > 
+[22mmaneja respuesta vac├¡a sin crashear
+[41m[1m FAIL [22m[49m src/app/dashboard/usuarios/page.test.tsx[2m > [22mdashboard/usuarios/page.tsx[2m > 
+[22mmuestra mensaje de error si el backend falla
+[41m[1m FAIL [22m[49m src/app/dashboard/suscripciones/page.test.tsx[2m > 
+[22mdashboard/suscripciones/page.tsx[2m > [22mrenderiza la lista de suscripciones cuando el backend devuelve 
+Page<SuscripcionResponseDTO>
+[41m[1m FAIL [22m[49m src/app/dashboard/suscripciones/page.test.tsx[2m > 
+[22mdashboard/suscripciones/page.tsx[2m > [22mPREVENCI├ôN DE REGRESI├ôN: detecta si alguien rompe el contrato 
+Page<T>
+[41m[1m FAIL [22m[49m src/app/dashboard/suscripciones/page.test.tsx[2m > 
+[22mdashboard/suscripciones/page.tsx[2m > [22mmaneja respuesta vac├¡a sin crashear
+[41m[1m FAIL [22m[49m src/app/dashboard/suscripciones/page.test.tsx[2m > 
+[22mdashboard/suscripciones/page.tsx[2m > [22mmuestra mensaje de error si el backend falla
+[31m[1mTypeError[22m: React.act is not a function[39m
+[90m [2mÔØ»[22m exports.act node_modules/react-dom/cjs/react-dom-test-utils.production.js:[2m20:16[22m[39m
+[90m [2mÔØ»[22m node_modules/@testing-library/react/dist/act-compat.js:[2m46:25[22m[39m
+[90m [2mÔØ»[22m node_modules/@testing-library/react/dist/pure.js:[2m306:28[22m[39m
+[90m [2mÔØ»[22m cleanup node_modules/@testing-library/react/dist/pure.js:[2m302:22[22m[39m
+[36m [2mÔØ»[22m vitest.setup.ts:[2m8:3[22m[39m
+    [90m  6|[39m [90m// Limpia el DOM y los mocks entre tests para evitar fugas de estado.[39m
+    [90m  7|[39m [34mafterEach[39m(() [33m=>[39m {
+    [90m  8|[39m   [34mcleanup[39m()[33m;[39m
+    [90m   |[39m   [31m^[39m
+    [90m  9|[39m   vi[33m.[39m[34mrestoreAllMocks[39m()[33m;[39m
+    [90m 10|[39m })[33m;[39m
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[2/36]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m src/app/dashboard/page.test.tsx[2m > [22mdashboard/page.tsx ÔÇö rol ADMIN[2m > 
+[22mPREVENCI├ôN DE REGRESI├ôN: detecta si alguien rompe el contrato Page<T>
+[31m[1mTypeError[22m: React.act is not a function[39m
+[90m [2mÔØ»[22m exports.act node_modules/react-dom/cjs/react-dom-test-utils.production.js:[2m20:16[22m[39m
+[90m [2mÔØ»[22m node_modules/@testing-library/react/dist/act-compat.js:[2m46:25[22m[39m
+[90m [2mÔØ»[22m renderRoot node_modules/@testing-library/react/dist/pure.js:[2m189:26[22m[39m
+[90m [2mÔØ»[22m Proxy.render node_modules/@testing-library/react/dist/pure.js:[2m291:10[22m[39m
+[36m [2mÔØ»[22m src/app/dashboard/page.test.tsx:[2m95:5[22m[39m
+    [90m 93|[39m       [33m.[39m[34mmockResolvedValueOnce[39m([34mpageTotal[39m([34m7[39m))[33m;[39m
+    [90m 94|[39m
+    [90m 95|[39m     [34mrender[39m([33m<[39m[33mDashboardPage[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m   |[39m     [31m^[39m
+    [90m 96|[39m
+    [90m 97|[39m     [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[3/36]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m src/app/dashboard/page.test.tsx[2m > [22mdashboard/page.tsx ÔÇö rol ADMIN[2m > 
+[22mmuestra AdminDashboardCharts solo para ADMIN
+[31m[1mTypeError[22m: React.act is not a function[39m
+[90m [2mÔØ»[22m exports.act node_modules/react-dom/cjs/react-dom-test-utils.production.js:[2m20:16[22m[39m
+[90m [2mÔØ»[22m node_modules/@testing-library/react/dist/act-compat.js:[2m46:25[22m[39m
+[90m [2mÔØ»[22m renderRoot node_modules/@testing-library/react/dist/pure.js:[2m189:26[22m[39m
+[90m [2mÔØ»[22m Proxy.render node_modules/@testing-library/react/dist/pure.js:[2m291:10[22m[39m
+[36m [2mÔØ»[22m src/app/dashboard/page.test.tsx:[2m111:5[22m[39m
+    [90m109|[39m       [33m.[39m[34mmockResolvedValueOnce[39m([34mpageTotal[39m([34m7[39m))[33m;[39m
+    [90m110|[39m
+    [90m111|[39m     [34mrender[39m([33m<[39m[33mDashboardPage[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m   |[39m     [31m^[39m
+    [90m112|[39m
+    [90m113|[39m     [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[4/36]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m src/app/dashboard/page.test.tsx[2m > [22mdashboard/page.tsx ÔÇö rol CLIENTE (no-ADMIN)[2m 
+> [22mmuestra 'N/A' en los PlateStat restringidos y NO llama a /usuarios ni /suscripciones
+[31m[1mTypeError[22m: React.act is not a function[39m
+[90m [2mÔØ»[22m exports.act node_modules/react-dom/cjs/react-dom-test-utils.production.js:[2m20:16[22m[39m
+[90m [2mÔØ»[22m node_modules/@testing-library/react/dist/act-compat.js:[2m46:25[22m[39m
+[90m [2mÔØ»[22m renderRoot node_modules/@testing-library/react/dist/pure.js:[2m189:26[22m[39m
+[90m [2mÔØ»[22m Proxy.render node_modules/@testing-library/react/dist/pure.js:[2m291:10[22m[39m
+[36m [2mÔØ»[22m src/app/dashboard/page.test.tsx:[2m128:5[22m[39m
+    [90m126|[39m     vi[33m.[39m[34mmocked[39m(api[33m.[39m[35mget[39m)[33m.[39m[34mmockResolvedValueOnce
+[39m([34mpageTotal[39m([34m5[39m))[33m;[39m
+    [90m127|[39m
+    [90m128|[39m     [34mrender[39m([33m<[39m[33mDashboardPage[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m   |[39m     [31m^[39m
+    [90m129|[39m
+    [90m130|[39m     [90m// Planes activos: visible (CLIENTE s├¡ lo ve)[39m
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[5/36]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m src/app/dashboard/page.test.tsx[2m > [22mdashboard/page.tsx ÔÇö rol CLIENTE (no-ADMIN)[2m 
+> [22mNO renderiza AdminDashboardCharts para CLIENTE
+[31m[1mTypeError[22m: React.act is not a function[39m
+[90m [2mÔØ»[22m exports.act node_modules/react-dom/cjs/react-dom-test-utils.production.js:[2m20:16[22m[39m
+[90m [2mÔØ»[22m node_modules/@testing-library/react/dist/act-compat.js:[2m46:25[22m[39m
+[90m [2mÔØ»[22m renderRoot node_modules/@testing-library/react/dist/pure.js:[2m189:26[22m[39m
+[90m [2mÔØ»[22m Proxy.render node_modules/@testing-library/react/dist/pure.js:[2m291:10[22m[39m
+[36m [2mÔØ»[22m src/app/dashboard/page.test.tsx:[2m149:5[22m[39m
+    [90m147|[39m     vi[33m.[39m[34mmocked[39m(api[33m.[39m[35mget[39m)[33m.[39m[34mmockResolvedValueOnce
+[39m([34mpageTotal[39m([34m5[39m))[33m;[39m
+    [90m148|[39m
+    [90m149|[39m     [34mrender[39m([33m<[39m[33mDashboardPage[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m   |[39m     [31m^[39m
+    [90m150|[39m
+    [90m151|[39m     [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[6/36]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m src/app/dashboard/page.test.tsx[2m > [22mdashboard/page.tsx ÔÇö manejo de errores[2m > 
+[22mmuestra mensaje de error si el backend falla
+[31m[1mTypeError[22m: React.act is not a function[39m
+[90m [2mÔØ»[22m exports.act node_modules/react-dom/cjs/react-dom-test-utils.production.js:[2m20:16[22m[39m
+[90m [2mÔØ»[22m node_modules/@testing-library/react/dist/act-compat.js:[2m46:25[22m[39m
+[90m [2mÔØ»[22m renderRoot node_modules/@testing-library/react/dist/pure.js:[2m189:26[22m[39m
+[90m [2mÔØ»[22m Proxy.render node_modules/@testing-library/react/dist/pure.js:[2m291:10[22m[39m
+[36m [2mÔØ»[22m src/app/dashboard/page.test.tsx:[2m169:5[22m[39m
+    [90m167|[39m     vi.mocked(api.get).mockRejectedValueOnce(new Error("Network error"ÔÇª
+    [90m168|[39m
+    [90m169|[39m     [34mrender[39m([33m<[39m[33mDashboardPage[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m   |[39m     [31m^[39m
+    [90m170|[39m
+    [90m171|[39m     [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[7/36]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m src/app/dashboard/planes/page.test.tsx[2m > [22mdashboard/planes/page.tsx[2m > 
+[22mrenderiza la lista de planes cuando el backend devuelve Page<PlanResponseDTO>
+[31m[1mTypeError[22m: React.act is not a function[39m
+[90m [2mÔØ»[22m exports.act node_modules/react-dom/cjs/react-dom-test-utils.production.js:[2m20:16[22m[39m
+[90m [2mÔØ»[22m node_modules/@testing-library/react/dist/act-compat.js:[2m46:25[22m[39m
+[90m [2mÔØ»[22m renderRoot node_modules/@testing-library/react/dist/pure.js:[2m189:26[22m[39m
+[90m [2mÔØ»[22m Proxy.render node_modules/@testing-library/react/dist/pure.js:[2m291:10[22m[39m
+[36m [2mÔØ»[22m src/app/dashboard/planes/page.test.tsx:[2m100:5[22m[39m
+    [90m 98|[39m     vi[33m.[39m[34mmocked[39m(api[33m.[39m[35mget[39m)[33m.[39m[34mmockResolvedValueOnce
+[39m([34mpageResponse[39m(plansMock))[33m;[39m
+    [90m 99|[39m
+    [90m100|[39m     [34mrender[39m([33m<[39m[33mPlanesPage[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m   |[39m     [31m^[39m
+    [90m101|[39m
+    [90m102|[39m     [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[8/36]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m src/app/dashboard/planes/page.test.tsx[2m > [22mdashboard/planes/page.tsx[2m > 
+[22mPREVENCI├ôN DE REGRESI├ôN: detecta si alguien rompe el contrato Page<T>
+[31m[1mTypeError[22m: React.act is not a function[39m
+[90m [2mÔØ»[22m exports.act node_modules/react-dom/cjs/react-dom-test-utils.production.js:[2m20:16[22m[39m
+[90m [2mÔØ»[22m node_modules/@testing-library/react/dist/act-compat.js:[2m46:25[22m[39m
+[90m [2mÔØ»[22m renderRoot node_modules/@testing-library/react/dist/pure.js:[2m189:26[22m[39m
+[90m [2mÔØ»[22m Proxy.render node_modules/@testing-library/react/dist/pure.js:[2m291:10[22m[39m
+[36m [2mÔØ»[22m src/app/dashboard/planes/page.test.tsx:[2m121:5[22m[39m
+    [90m119|[39m     vi[33m.[39m[34mmocked[39m(api[33m.[39m[35mget[39m)[33m.[39m[34mmockResolvedValueOnce
+[39m([34mpageResponse[39m(plansMock))[33m;[39m
+    [90m120|[39m
+    [90m121|[39m     [34mrender[39m([33m<[39m[33mPlanesPage[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m   |[39m     [31m^[39m
+    [90m122|[39m
+    [90m123|[39m     // El assert real: los nombres de planes deben aparecer en el DOM,ÔÇª
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[9/36]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m src/app/dashboard/planes/page.test.tsx[2m > [22mdashboard/planes/page.tsx[2m > 
+[22mmaneja respuesta vac├¡a sin crashear
+[31m[1mTypeError[22m: React.act is not a function[39m
+[90m [2mÔØ»[22m exports.act node_modules/react-dom/cjs/react-dom-test-utils.production.js:[2m20:16[22m[39m
+[90m [2mÔØ»[22m node_modules/@testing-library/react/dist/act-compat.js:[2m46:25[22m[39m
+[90m [2mÔØ»[22m renderRoot node_modules/@testing-library/react/dist/pure.js:[2m189:26[22m[39m
+[90m [2mÔØ»[22m Proxy.render node_modules/@testing-library/react/dist/pure.js:[2m291:10[22m[39m
+[36m [2mÔØ»[22m src/app/dashboard/planes/page.test.tsx:[2m134:5[22m[39m
+    [90m132|[39m     vi[33m.[39m[34mmocked[39m(api[33m.[39m[35mget[39m)[33m.[39m[34mmockResolvedValueOnce
+[39m([34mpageResponse[39m([]))[33m;[39m
+    [90m133|[39m
+    [90m134|[39m     [34mrender[39m([33m<[39m[33mPlanesPage[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m   |[39m     [31m^[39m
+    [90m135|[39m
+    [90m136|[39m     [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[10/36]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m src/app/dashboard/planes/page.test.tsx[2m > [22mdashboard/planes/page.tsx[2m > 
+[22mmuestra mensaje de error si el backend falla
+[31m[1mTypeError[22m: React.act is not a function[39m
+[90m [2mÔØ»[22m exports.act node_modules/react-dom/cjs/react-dom-test-utils.production.js:[2m20:16[22m[39m
+[90m [2mÔØ»[22m node_modules/@testing-library/react/dist/act-compat.js:[2m46:25[22m[39m
+[90m [2mÔØ»[22m renderRoot node_modules/@testing-library/react/dist/pure.js:[2m189:26[22m[39m
+[90m [2mÔØ»[22m Proxy.render node_modules/@testing-library/react/dist/pure.js:[2m291:10[22m[39m
+[36m [2mÔØ»[22m src/app/dashboard/planes/page.test.tsx:[2m146:5[22m[39m
+    [90m144|[39m     vi.mocked(api.get).mockRejectedValueOnce(new Error("Network error"ÔÇª
+    [90m145|[39m
+    [90m146|[39m     [34mrender[39m([33m<[39m[33mPlanesPage[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m   |[39m     [31m^[39m
+    [90m147|[39m
+    [90m148|[39m     [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[11/36]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m src/app/dashboard/usuarios/page.test.tsx[2m > [22mdashboard/usuarios/page.tsx[2m > 
+[22mrenderiza la lista de usuarios cuando el backend devuelve Page<UsuarioResponseDTO>
+[31m[1mTypeError[22m: React.act is not a function[39m
+[90m [2mÔØ»[22m exports.act node_modules/react-dom/cjs/react-dom-test-utils.production.js:[2m20:16[22m[39m
+[90m [2mÔØ»[22m node_modules/@testing-library/react/dist/act-compat.js:[2m46:25[22m[39m
+[90m [2mÔØ»[22m renderRoot node_modules/@testing-library/react/dist/pure.js:[2m189:26[22m[39m
+[90m [2mÔØ»[22m Proxy.render node_modules/@testing-library/react/dist/pure.js:[2m291:10[22m[39m
+[36m [2mÔØ»[22m src/app/dashboard/usuarios/page.test.tsx:[2m88:5[22m[39m
+    [90m 86|[39m     vi.mocked(api.get).mockResolvedValueOnce(pageResponse(USUARIOS_MOCÔÇª
+    [90m 87|[39m
+    [90m 88|[39m     [34mrender[39m([33m<[39m[33mUsuariosPage[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m   |[39m     [31m^[39m
+    [90m 89|[39m
+    [90m 90|[39m     [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[12/36]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m src/app/dashboard/usuarios/page.test.tsx[2m > [22mdashboard/usuarios/page.tsx[2m > 
+[22mPREVENCI├ôN DE REGRESI├ôN: detecta si alguien rompe el contrato Page<T>
+[31m[1mTypeError[22m: React.act is not a function[39m
+[90m [2mÔØ»[22m exports.act node_modules/react-dom/cjs/react-dom-test-utils.production.js:[2m20:16[22m[39m
+[90m [2mÔØ»[22m node_modules/@testing-library/react/dist/act-compat.js:[2m46:25[22m[39m
+[90m [2mÔØ»[22m renderRoot node_modules/@testing-library/react/dist/pure.js:[2m189:26[22m[39m
+[90m [2mÔØ»[22m Proxy.render node_modules/@testing-library/react/dist/pure.js:[2m291:10[22m[39m
+[36m [2mÔØ»[22m src/app/dashboard/usuarios/page.test.tsx:[2m109:5[22m[39m
+    [90m107|[39m     vi.mocked(api.get).mockResolvedValueOnce(pageResponse(USUARIOS_MOCÔÇª
+    [90m108|[39m
+    [90m109|[39m     [34mrender[39m([33m<[39m[33mUsuariosPage[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m   |[39m     [31m^[39m
+    [90m110|[39m
+    [90m111|[39m     [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[13/36]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m src/app/dashboard/usuarios/page.test.tsx[2m > [22mdashboard/usuarios/page.tsx[2m > 
+[22mmaneja respuesta vac├¡a sin crashear
+[31m[1mTypeError[22m: React.act is not a function[39m
+[90m [2mÔØ»[22m exports.act node_modules/react-dom/cjs/react-dom-test-utils.production.js:[2m20:16[22m[39m
+[90m [2mÔØ»[22m node_modules/@testing-library/react/dist/act-compat.js:[2m46:25[22m[39m
+[90m [2mÔØ»[22m renderRoot node_modules/@testing-library/react/dist/pure.js:[2m189:26[22m[39m
+[90m [2mÔØ»[22m Proxy.render node_modules/@testing-library/react/dist/pure.js:[2m291:10[22m[39m
+[36m [2mÔØ»[22m src/app/dashboard/usuarios/page.test.tsx:[2m120:5[22m[39m
+    [90m118|[39m     vi[33m.[39m[34mmocked[39m(api[33m.[39m[35mget[39m)[33m.[39m[34mmockResolvedValueOnce
+[39m([34mpageResponse[39m([]))[33m;[39m
+    [90m119|[39m
+    [90m120|[39m     [34mrender[39m([33m<[39m[33mUsuariosPage[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m   |[39m     [31m^[39m
+    [90m121|[39m
+    [90m122|[39m     [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[14/36]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m src/app/dashboard/usuarios/page.test.tsx[2m > [22mdashboard/usuarios/page.tsx[2m > 
+[22mmuestra mensaje de error si el backend falla
+[31m[1mTypeError[22m: React.act is not a function[39m
+[90m [2mÔØ»[22m exports.act node_modules/react-dom/cjs/react-dom-test-utils.production.js:[2m20:16[22m[39m
+[90m [2mÔØ»[22m node_modules/@testing-library/react/dist/act-compat.js:[2m46:25[22m[39m
+[90m [2mÔØ»[22m renderRoot node_modules/@testing-library/react/dist/pure.js:[2m189:26[22m[39m
+[90m [2mÔØ»[22m Proxy.render node_modules/@testing-library/react/dist/pure.js:[2m291:10[22m[39m
+[36m [2mÔØ»[22m src/app/dashboard/usuarios/page.test.tsx:[2m132:5[22m[39m
+    [90m130|[39m     vi.mocked(api.get).mockRejectedValueOnce(new Error("Network error"ÔÇª
+    [90m131|[39m
+
+[2m Test Files [22m [1m[31m4 failed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[31m18 failed[39m[22m[90m (18)[39m
+[2m   Start at [22m 11:07:38
+[2m   Duration [22m 5.06s[2m (transform 607ms, setup 3.25s, import 1.24s, tests 93ms, environment 13.32s)[22m
+    [90m132|[39m     [34mrender[39m([33m<[39m[33mUsuariosPage[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m   |[39m     [31m^[39m
+    [90m133|[39m
+    [90m134|[39m     [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[15/36]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m src/app/dashboard/suscripciones/page.test.tsx[2m > 
+[22mdashboard/suscripciones/page.tsx[2m > [22mrenderiza la lista de suscripciones cuando el backend devuelve 
+Page<SuscripcionResponseDTO>
+[31m[1mTypeError[22m: React.act is not a function[39m
+[90m [2mÔØ»[22m exports.act node_modules/react-dom/cjs/react-dom-test-utils.production.js:[2m20:16[22m[39m
+[90m [2mÔØ»[22m node_modules/@testing-library/react/dist/act-compat.js:[2m46:25[22m[39m
+[90m [2mÔØ»[22m renderRoot node_modules/@testing-library/react/dist/pure.js:[2m189:26[22m[39m
+[90m [2mÔØ»[22m Proxy.render node_modules/@testing-library/react/dist/pure.js:[2m291:10[22m[39m
+[36m [2mÔØ»[22m src/app/dashboard/suscripciones/page.test.tsx:[2m91:5[22m[39m
+    [90m 89|[39m     vi.mocked(api.get).mockResolvedValueOnce(pageResponse(SUSCRIPCIONEÔÇª
+    [90m 90|[39m
+    [90m 91|[39m     [34mrender[39m([33m<[39m[33mSuscripcionesPage[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m   |[39m     [31m^[39m
+    [90m 92|[39m
+    [90m 93|[39m     [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[16/36]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m src/app/dashboard/suscripciones/page.test.tsx[2m > 
+[22mdashboard/suscripciones/page.tsx[2m > [22mPREVENCI├ôN DE REGRESI├ôN: detecta si alguien rompe el contrato 
+Page<T>
+[31m[1mTypeError[22m: React.act is not a function[39m
+[90m [2mÔØ»[22m exports.act node_modules/react-dom/cjs/react-dom-test-utils.production.js:[2m20:16[22m[39m
+[90m [2mÔØ»[22m node_modules/@testing-library/react/dist/act-compat.js:[2m46:25[22m[39m
+[90m [2mÔØ»[22m renderRoot node_modules/@testing-library/react/dist/pure.js:[2m189:26[22m[39m
+[90m [2mÔØ»[22m Proxy.render node_modules/@testing-library/react/dist/pure.js:[2m291:10[22m[39m
+[36m [2mÔØ»[22m src/app/dashboard/suscripciones/page.test.tsx:[2m113:5[22m[39m
+    [90m111|[39m     vi.mocked(api.get).mockResolvedValueOnce(pageResponse(SUSCRIPCIONEÔÇª
+    [90m112|[39m
+    [90m113|[39m     [34mrender[39m([33m<[39m[33mSuscripcionesPage[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m   |[39m     [31m^[39m
+    [90m114|[39m
+    [90m115|[39m     [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[17/36]ÔÄ»[22m[39m
+
+
+[41m[1m FAIL [22m[49m src/app/dashboard/suscripciones/page.test.tsx[2m > 
+[22mdashboard/suscripciones/page.tsx[2m > [22mmaneja respuesta vac├¡a sin crashear
+[31m[1mTypeError[22m: React.act is not a function[39m
+[90m [2mÔØ»[22m exports.act node_modules/react-dom/cjs/react-dom-test-utils.production.js:[2m20:16[22m[39m
+[90m [2mÔØ»[22m node_modules/@testing-library/react/dist/act-compat.js:[2m46:25[22m[39m
+[90m [2mÔØ»[22m renderRoot node_modules/@testing-library/react/dist/pure.js:[2m189:26[22m[39m
+[90m [2mÔØ»[22m Proxy.render node_modules/@testing-library/react/dist/pure.js:[2m291:10[22m[39m
+[36m [2mÔØ»[22m src/app/dashboard/suscripciones/page.test.tsx:[2m124:5[22m[39m
+    [90m122|[39m     vi[33m.[39m[34mmocked[39m(api[33m.[39m[35mget[39m)[33m.[39m[34mmockResolvedValueOnce
+[39m([34mpageResponse[39m([]))[33m;[39m
+    [90m123|[39m
+    [90m124|[39m     [34mrender[39m([33m<[39m[33mSuscripcionesPage[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m   |[39m     [31m^[39m
+    [90m125|[39m
+    [90m126|[39m     [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[18/36]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m src/app/dashboard/suscripciones/page.test.tsx[2m > 
+[22mdashboard/suscripciones/page.tsx[2m > [22mmuestra mensaje de error si el backend falla
+[31m[1mTypeError[22m: React.act is not a function[39m
+[90m [2mÔØ»[22m exports.act node_modules/react-dom/cjs/react-dom-test-utils.production.js:[2m20:16[22m[39m
+[90m [2mÔØ»[22m node_modules/@testing-library/react/dist/act-compat.js:[2m46:25[22m[39m
+[90m [2mÔØ»[22m renderRoot node_modules/@testing-library/react/dist/pure.js:[2m189:26[22m[39m
+[90m [2mÔØ»[22m Proxy.render node_modules/@testing-library/react/dist/pure.js:[2m291:10[22m[39m
+[36m [2mÔØ»[22m src/app/dashboard/suscripciones/page.test.tsx:[2m136:5[22m[39m
+    [90m134|[39m     vi.mocked(api.get).mockRejectedValueOnce(new Error("Network error"ÔÇª
+    [90m135|[39m
+    [90m136|[39m     [34mrender[39m([33m<[39m[33mSuscripcionesPage[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m   |[39m     [31m^[39m
+    [90m137|[39m
+    [90m138|[39m     [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[19/36]ÔÄ»[22m[39m
+
