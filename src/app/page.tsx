@@ -143,6 +143,35 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* ─── ADMIN DASHBOARD VIDEO ───────────────────────────── */}
+      <section className="border-t border-ink-700 bg-ink-900 px-4 py-16 sm:px-6 md:py-20">
+        <div className="mx-auto max-w-5xl">
+          <header className="mb-10 text-center">
+            <h2 className="font-display text-2xl font-bold text-concrete-50 sm:text-3xl">
+              Tablero admin en acción
+            </h2>
+            <p className="mt-2 font-mono text-sm text-ink-500">
+              Un clip real del dashboard ADMIN con métricas pobladas y navegación a todas las secciones.
+            </p>
+          </header>
+
+          <div className="overflow-hidden rounded-none border-2 border-ink-700 bg-black shadow-[6px_6px_0_0_rgba(0,0,0,0.4)]">
+            <video
+              className="w-full"
+              src="/videos/admin-dashboard.webm"
+              autoPlay
+              muted
+              loop
+              playsInline
+            />
+          </div>
+
+          <p className="mt-4 text-sm text-concrete-300">
+            Muestra las métricas reales del dashboard, usuarios, suscripciones y planes.
+          </p>
+        </div>
+      </section>
+
       {/* ─── TECH SPECS — "Placa de especificaciones" ────────── */}
       <section className="border-t border-ink-700 bg-ink-800 px-4 py-16 sm:px-6 md:py-20">
         <div className="mx-auto max-w-3xl">
