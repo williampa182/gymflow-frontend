@@ -1,36 +1,101 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GymFlow — Frontend
 
-## Getting Started
+[![Frontend CI](https://github.com/williampa182/gymflow-frontend/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/williampa182/gymflow-frontend/actions/workflows/frontend-ci.yml)
+![Next.js](https://img.shields.io/badge/Next.js-16-black)
+![React](https://img.shields.io/badge/React-19-61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6)
 
-First, run the development server:
+Frontend de GymFlow, un sistema de gestión de gimnasios: registro/login,
+planes, suscripciones y un dashboard administrativo. Sigue un sistema de
+diseño propio ("sala de máquinas" industrial — paleta concrete-dark,
+acentos hazard-amber, remaches, sombras duras) en vez de un theme
+genérico de componente library.
+
+Proyecto de portafolio construido con un flujo de colaboración
+multi-agente (ver `AGENTS.md`), documentado en detalle para servir también
+como referencia de proceso, no solo de código.
+
+**Demo en vivo:** [gymflow-frontend-production.up.railway.app](https://gymflow-frontend-production.up.railway.app)
+· **Backend:** [gymflow-backend](https://github.com/williampa182/gymflow-backend) ·
+[demo API](https://gymflow-backend-production-0a1b.up.railway.app)
+
+## Stack
+
+- **Next.js 16** (App Router) + **React 19** + **TypeScript**
+- **Tailwind CSS v4**
+- **Axios** para el cliente HTTP, con proxy propio (`proxy.ts`, no
+  `middleware.ts`) hacia el backend
+- **Recharts** para las visualizaciones del dashboard admin
+- **Vitest** + Testing Library para tests unitarios, **Playwright** para
+  e2e
+- **GitHub Actions** para CI/CD, despliegue en **Railway**
+
+## Decisiones técnicas
+
+- **Cookie httpOnly en vez de localStorage para el JWT**: el token de
+  sesión no es accesible desde JavaScript en el cliente, lo que reduce la
+  superficie de ataque XSS. El trade-off es manejar la sesión vía
+  proxy/servidor en vez de leerla directamente en el cliente.
+- **`proxy.ts` en vez de `middleware.ts`**: la convención de Next.js 16
+  cambió el mecanismo de proxy/rewrite server-side; usar el archivo
+  equivocado hace que las llamadas al backend fallen silenciosamente en
+  ciertos casos — se detectó y corrigió durante el desarrollo.
+- **Sistema de diseño propio en vez de una UI library genérica**: para un
+  proyecto de portafolio, un tema por defecto de shadcn/MUI se ve como el
+  de cualquier otro proyecto. La estética "sala de máquinas" es una
+  decisión deliberada de identidad visual.
+
+## Features
+
+- Registro y login con manejo de sesión vía cookie httpOnly
+- CRUD de planes y suscripciones (según rol)
+- Dashboard administrativo con métricas (gráficos con Recharts)
+- Landing page con las decisiones técnicas del proyecto explicadas para
+  quien lo revisa
+- **Nota sobre el chatbot de soporte**: el backend ya expone
+  `POST /api/chat` (RAG simple sobre los planes, autenticado, con rate
+  limiting), pero todavía no hay UI en este repo que lo consuma — queda
+  como próximo paso.
+
+## Empezar en local
+
+Requisitos: Node.js 20+, y el backend de GymFlow corriendo (ver
+[gymflow-backend](https://github.com/williampa182/gymflow-backend)).
 
 ```bash
+# Instalar dependencias
+npm install
+
+# Copiar y ajustar las variables de entorno
+cp .env.example .env
+
+# Correr en modo desarrollo
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+La app queda disponible en `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Tests
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# Unitarios
+npm test
 
-## Learn More
+# End-to-end (Playwright)
+npm run test:e2e
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Documentación adicional
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `AGENTS.md` — convenciones para agentes de IA que colaboran en este
+  repo.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Seguridad
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Este proyecto pasó por una auditoría de seguridad dedicada en conjunto
+con el backend (ver README de
+[gymflow-backend](https://github.com/williampa182/gymflow-backend#seguridad)
+para el detalle completo). En el frontend, el punto central fue el manejo
+de sesión vía cookie httpOnly en vez de almacenamiento accesible por
+JavaScript, además de la restricción de visibilidad de planes inactivos
+para usuarios no admin.
