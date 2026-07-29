@@ -100,3 +100,14 @@ export interface DashboardAdminStatsDTO {
   ingresosPorTipoPlan: IngresoTipoPlanStat[];
   suscripcionesPorEstado: EstadoSuscripcionStat[];
 }
+
+// ─── Chatbot de soporte ───────────────────────────────────────────
+// Debe coincidir con ChatController.java / ChatRequest.java / ChatResponse.java.
+// mensaje: máx 2000 chars (validado también en el backend con @Size).
+export interface ChatRequestDTO {
+  mensaje: string;
+}
+
+export interface ChatResponseDTO {
+  respuesta: string;
+}

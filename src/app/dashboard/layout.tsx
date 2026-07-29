@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { loadSession, getRol, hasRole, logout } from "@/lib/auth";
+import ChatWidget from "./_components/ChatWidget";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -86,6 +87,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
         <div className="mx-auto max-w-5xl">{children}</div>
       </main>
+
+      <ChatWidget />
     </div>
   );
 }
