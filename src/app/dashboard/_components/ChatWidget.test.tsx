@@ -94,6 +94,26 @@ describe("ChatWidget", () => {
     expect(screen.getByText(/acceso básico/)).toBeInTheDocument();
   });
 
+  it("renderiza una tabla Markdown como <table> en vez de líneas con pipes", async () => {
+    vi.mocked(api.post).mockResolvedValueOnce({
+      data: {
+        respuesta:
+          "Estos son los planes:\n| Plan | Precio |\n|---|---|\n| Mensual | $50.000 |\n| Anual | $500.000 |",
+      },
+    });
+
+    await abrirYEscribir("qué planes hay");
+
+    await waitFor(() => {
+      expect(screen.getByRole("table")).toBeInTheDocument();
+    });
+    expect(screen.getByRole("columnheader", { name: "Plan" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Precio" })).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "Mensual" })).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "$500.000" })).toBeInTheDocument();
+    expect(screen.queryByText(/---/)).not.toBeInTheDocument();
+  });
+
   it("no permite enviar un mensaje vacío", async () => {
     const user = userEvent.setup();
     render(<ChatWidget />);

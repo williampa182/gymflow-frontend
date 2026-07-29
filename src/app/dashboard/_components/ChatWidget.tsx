@@ -164,24 +164,109 @@ export default function ChatWidget() {
 // sumar una librería completa de Markdown (react-markdown) para tan poco, y
 // sin dangerouslySetInnerHTML — construye elementos React directamente, no
 // inyecta HTML crudo de una respuesta del LLM.
+// Una fila de tabla markdown tiene al menos un "|"; la fila separadora
+// (segunda fila del bloque) es solo guiones, espacios, ":" y "|", p.ej.
+// "|---|:---:|". Se exige esa separadora para no confundir un "|" suelto
+// dentro de una oración normal con el inicio de una tabla.
+const ES_FILA_TABLA = /\|/;
+const ES_SEPARADOR_TABLA = /^\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?$/;
+
 function renderizarMensaje(texto: string) {
   const lineas = texto
     .split("\n")
     .map((linea) => linea.trim())
     .filter((linea) => linea.length > 0);
 
+  const bloques: Array<{ tipo: "texto"; lineas: string[] } | { tipo: "tabla"; lineas: string[] }> = [];
+  let i = 0;
+  while (i < lineas.length) {
+    const esInicioTabla =
+      ES_FILA_TABLA.test(lineas[i]) &&
+      i + 1 < lineas.length &&
+      ES_SEPARADOR_TABLA.test(lineas[i + 1]) &&
+      ES_FILA_TABLA.test(lineas[i + 1]);
+
+    if (esInicioTabla) {
+      const filas = [lineas[i]];
+      let j = i + 2;
+      while (j < lineas.length && ES_FILA_TABLA.test(lineas[j])) {
+        filas.push(lineas[j]);
+        j++;
+      }
+      bloques.push({ tipo: "tabla", lineas: filas });
+      i = j;
+    } else {
+      const ultimo = bloques[bloques.length - 1];
+      if (ultimo && ultimo.tipo === "texto") {
+        ultimo.lineas.push(lineas[i]);
+      } else {
+        bloques.push({ tipo: "texto", lineas: [lineas[i]] });
+      }
+      i++;
+    }
+  }
+
   return (
-    <div className="space-y-1.5">
-      {lineas.map((linea, i) => {
-        const esItem = /^\*\s+/.test(linea);
-        const contenido = linea.replace(/^\*\s+/, "");
-        return (
-          <p key={i} className={esItem ? "pl-3" : undefined}>
-            {esItem && "• "}
-            {renderizarNegritas(contenido)}
-          </p>
-        );
-      })}
+    <div className="space-y-2">
+      {bloques.map((bloque, bi) =>
+        bloque.tipo === "tabla" ? (
+          <TablaMensaje key={bi} filas={bloque.lineas} />
+        ) : (
+          <div key={bi} className="space-y-1.5">
+            {bloque.lineas.map((linea, i) => {
+              const esItem = /^\*\s+/.test(linea);
+              const contenido = linea.replace(/^\*\s+/, "");
+              return (
+                <p key={i} className={esItem ? "pl-3" : undefined}>
+                  {esItem && "• "}
+                  {renderizarNegritas(contenido)}
+                </p>
+              );
+            })}
+          </div>
+        )
+      )}
+    </div>
+  );
+}
+
+function partirFila(fila: string): string[] {
+  return fila
+    .replace(/^\|/, "")
+    .replace(/\|$/, "")
+    .split("|")
+    .map((celda) => celda.trim());
+}
+
+function TablaMensaje({ filas }: { filas: string[] }) {
+  // filas[0] = encabezado; la separadora ya fue descartada al agrupar el bloque.
+  const encabezado = partirFila(filas[0]);
+  const datos = filas.slice(1).map(partirFila);
+
+  return (
+    <div className="overflow-x-auto rounded-md border border-concrete-300">
+      <table className="w-full border-collapse text-xs">
+        <thead>
+          <tr className="bg-ink-900 text-concrete-50">
+            {encabezado.map((celda, i) => (
+              <th key={i} className="border-b border-concrete-300 px-2 py-1.5 text-left font-display font-semibold">
+                {renderizarNegritas(celda)}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {datos.map((fila, i) => (
+            <tr key={i} className={i % 2 === 1 ? "bg-concrete-100/60" : undefined}>
+              {fila.map((celda, j) => (
+                <td key={j} className="border-b border-concrete-300/60 px-2 py-1.5 align-top">
+                  {renderizarNegritas(celda)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
