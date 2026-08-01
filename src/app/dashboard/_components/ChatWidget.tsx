@@ -100,7 +100,7 @@ export default function ChatWidget() {
             </button>
           </div>
 
-          <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+          <div ref={listRef} aria-live="polite" className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
             {mensajes.length === 0 && (
               <p className="font-mono text-xs text-ink-500">
                 Hola. Preguntame algo sobre los planes de GymFlow.

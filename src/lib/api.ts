@@ -13,12 +13,14 @@ const api = axios.create({
 // La cookie "token" viaja automáticamente en cada request del mismo origen,
 // así que ya no hace falta un interceptor que la agregue manualmente.
 
-// Interceptor de respuesta: si el token expiró o es inválido (401), redirige a login.
+// Interceptor de respuesta: si el token expiró o es inválido (401),
+// la sesión terminó — vuelve a la página principal (mismo criterio que
+// el logout explícito en auth.ts).
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401 && typeof window !== "undefined") {
-      window.location.href = "/login";
+      window.location.href = "/";
     }
     return Promise.reject(error);
   }

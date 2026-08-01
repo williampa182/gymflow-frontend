@@ -5,8 +5,12 @@ import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { hasRole } from "@/lib/auth";
 import { Rol, UsuarioResponseDTO } from "@/types";
+import { Select } from "@/components/Select";
+import { useToast } from "@/lib/toast";
+import { PageHeader } from "@/components/PageHeader";
+import { EmptyState } from "@/components/EmptyState";
+import { SkeletonFilas } from "@/components/Skeleton";
 import {
-  input,
   errorBanner,
   buttonSecondary,
   badgeEstado,
@@ -20,6 +24,7 @@ const ROLES: Rol[] = ["ADMIN", "ENTRENADOR", "CLIENTE"];
 
 export default function UsuariosPage() {
   const router = useRouter();
+  const { notificar } = useToast();
   const [autorizado, setAutorizado] = useState(false);
 
   useEffect(() => {
@@ -64,6 +69,7 @@ export default function UsuariosPage() {
       await api.patch(`/usuarios/${usuario.id}/estado`, null, {
         params: { activo: !usuario.activo },
       });
+      notificar("exito", usuario.activo ? "Usuario desactivado." : "Usuario activado.");
       await cargarUsuarios();
     } catch (err) {
       console.error(err);
@@ -79,27 +85,26 @@ export default function UsuariosPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-display text-3xl font-bold text-ink-900">Usuarios</h1>
-
-        <select
-          value={filtroRol}
-          onChange={(e) => setFiltroRol(e.target.value as Rol | "")}
-          className={`${input} w-auto`}
-        >
-          <option value="">Todos los roles</option>
-          {ROLES.map((r) => (
-            <option key={r} value={r}>
-              {r}
-            </option>
-          ))}
-        </select>
-      </div>
+      <PageHeader
+        titulo="Usuarios"
+        acciones={
+          <Select
+            value={filtroRol}
+            onChange={(v) => setFiltroRol(v as Rol | "")}
+            options={ROLES.map((r) => ({ value: r, label: r }))}
+            placeholder="Todos los roles"
+            ariaLabel="Filtrar por rol"
+            className="w-auto"
+          />
+        }
+      />
 
       {error && <p className={`mb-4 ${errorBanner}`}>{error}</p>}
 
       {loading ? (
-        <p className="font-mono text-sm text-ink-500">Cargando usuarios...</p>
+        <div className={tableWrap}>
+          <SkeletonFilas filas={5} />
+        </div>
       ) : (
         <div className={tableWrap}>
           <table className="w-full min-w-[720px] text-left text-sm">
@@ -144,9 +149,10 @@ export default function UsuariosPage() {
           </table>
 
           {usuarios.length === 0 && (
-            <p className="px-4 py-6 text-center font-mono text-sm text-ink-500">
-              No hay usuarios con ese filtro.
-            </p>
+            <EmptyState
+              mensaje="No hay usuarios con ese filtro."
+              variante={filtroRol ? "sinResultados" : "sinDatos"}
+            />
           )}
         </div>
       )}

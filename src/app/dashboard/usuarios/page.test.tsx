@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
+import { ToastProvider } from "@/lib/toast";
+import { ToastHost } from "@/components/ToastHost";
 
 // ─── Mocks ─────────────────────────────────────────────────────────
 vi.mock("@/lib/api", () => ({
@@ -30,6 +32,17 @@ vi.mock("next/navigation", () => ({
 
 import api from "@/lib/api";
 import UsuariosPage from "./page";
+
+// La página usa useToast(); el provider + host son requisito del árbol
+// (viven en el layout del dashboard en producción).
+function renderUsuarios() {
+  return render(
+    <ToastProvider>
+      <UsuariosPage />
+      <ToastHost />
+    </ToastProvider>
+  );
+}
 
 // ─── Helpers: shape real del Page<T> de Spring Data ─────────────────
 function pageResponse<T>(content: T[], totalElements = content.length) {
@@ -85,7 +98,7 @@ describe("dashboard/usuarios/page.tsx", () => {
   it("renderiza la lista de usuarios cuando el backend devuelve Page<UsuarioResponseDTO>", async () => {
     vi.mocked(api.get).mockResolvedValueOnce(pageResponse(USUARIOS_MOCK));
 
-    render(<UsuariosPage />);
+    renderUsuarios();
 
     await waitFor(() => {
       expect(screen.getByText("Ana García")).toBeInTheDocument();
@@ -106,7 +119,7 @@ describe("dashboard/usuarios/page.tsx", () => {
     // test falla en rojo.
     vi.mocked(api.get).mockResolvedValueOnce(pageResponse(USUARIOS_MOCK));
 
-    render(<UsuariosPage />);
+    renderUsuarios();
 
     await waitFor(() => {
       expect(screen.getByText("Ana García")).toBeInTheDocument();
@@ -117,7 +130,7 @@ describe("dashboard/usuarios/page.tsx", () => {
   it("maneja respuesta vacía sin crashear", async () => {
     vi.mocked(api.get).mockResolvedValueOnce(pageResponse([]));
 
-    render(<UsuariosPage />);
+    renderUsuarios();
 
     await waitFor(() => {
       expect(
@@ -129,7 +142,7 @@ describe("dashboard/usuarios/page.tsx", () => {
   it("muestra mensaje de error si el backend falla", async () => {
     vi.mocked(api.get).mockRejectedValueOnce(new Error("Network error"));
 
-    render(<UsuariosPage />);
+    renderUsuarios();
 
     await waitFor(() => {
       expect(

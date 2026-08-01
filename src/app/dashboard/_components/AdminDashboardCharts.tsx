@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import api from "@/lib/api";
 import {
   PieChart,
   Pie,
@@ -14,7 +12,7 @@ import {
   ResponsiveContainer,
   LabelList,
 } from "recharts";
-import { card, errorBanner } from "@/lib/ui";
+import { card } from "@/lib/ui";
 import type {
   Rol,
   TipoPlan,
@@ -86,41 +84,13 @@ const moneda = (v: number) =>
   });
 
 // ─── Componente principal ─────────────────────────────────────────
-export default function AdminDashboardCharts() {
-  const [stats, setStats] = useState<DashboardAdminStatsDTO | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelado = false;
-    async function cargar() {
-      try {
-        const { data } = await api.get<DashboardAdminStatsDTO>(
-          "/dashboard/admin/estadisticas"
-        );
-        if (!cancelado) setStats(data);
-      } catch (err) {
-        if (!cancelado) {
-          setError("No se pudieron cargar las estadísticas del dashboard.");
-        }
-        console.error(err);
-      } finally {
-        if (!cancelado) setLoading(false);
-      }
-    }
-    cargar();
-    return () => {
-      cancelado = true;
-    };
-  }, []);
-
-  if (loading) {
-    return <p className="font-mono text-sm text-ink-500">Cargando estadísticas...</p>;
-  }
-  if (error || !stats) {
-    return <p className={errorBanner}>{error ?? "Sin datos."}</p>;
-  }
-
+// Presentacional: recibe los stats por prop desde dashboard/page.tsx,
+// que ya los carga con un único fetch a /dashboard/admin/estadisticas.
+export default function AdminDashboardCharts({
+  stats,
+}: {
+  stats: DashboardAdminStatsDTO;
+}) {
   // ── Normalización: ordeno por el orden canónico de los enums ──
   const dataRol = ordenRol.map((rol) => {
     const d = stats.usuariosPorRol.find((x) => x.rol === rol);

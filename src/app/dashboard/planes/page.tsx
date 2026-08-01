@@ -5,6 +5,12 @@ import api from "@/lib/api";
 import { hasRole } from "@/lib/auth";
 import { PlanRequestDTO, PlanResponseDTO, TipoPlan } from "@/types";
 import axios from "axios";
+import { Select } from "@/components/Select";
+import { useFocusTrap } from "@/lib/useFocusTrap";
+import { useToast } from "@/lib/toast";
+import { PageHeader } from "@/components/PageHeader";
+import { EmptyState } from "@/components/EmptyState";
+import { SkeletonTarjetas } from "@/components/Skeleton";
 import {
   card,
   input,
@@ -32,16 +38,19 @@ const FORM_VACIO: PlanRequestDTO = {
 
 export default function PlanesPage() {
   const esAdmin = hasRole("ADMIN");
+  const { notificar } = useToast();
 
   const [planes, setPlanes] = useState<PlanResponseDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [cambiandoId, setCambiandoId] = useState<number | null>(null);
 
   const [mostrarForm, setMostrarForm] = useState(false);
   const [editandoId, setEditandoId] = useState<number | null>(null);
   const [form, setForm] = useState<PlanRequestDTO>(FORM_VACIO);
   const [guardando, setGuardando] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const modalRef = useFocusTrap(mostrarForm, cerrarForm);
 
   async function cargarPlanes() {
     setLoading(true);
@@ -105,6 +114,7 @@ export default function PlanesPage() {
         await api.post("/planes", form);
       }
       cerrarForm();
+      notificar("exito", editandoId ? "Plan actualizado." : "Plan creado.");
       await cargarPlanes();
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.data && typeof err.response.data === "object") {
@@ -119,29 +129,42 @@ export default function PlanesPage() {
   }
 
   async function cambiarEstado(plan: PlanResponseDTO) {
+    setCambiandoId(plan.id);
     try {
       await api.patch(`/planes/${plan.id}/estado`, null, {
         params: { activo: !plan.activo },
       });
+      notificar("exito", plan.activo ? "Plan desactivado." : "Plan activado.");
       await cargarPlanes();
     } catch (err) {
       console.error(err);
       setError("No se pudo cambiar el estado del plan.");
+    } finally {
+      setCambiandoId(null);
     }
   }
 
-  if (loading) return <p className="font-mono text-sm text-ink-500">Cargando planes...</p>;
+  if (loading) {
+    return (
+      <div>
+        <PageHeader titulo="Planes" />
+        <SkeletonTarjetas />
+      </div>
+    );
+  }
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-display text-3xl font-bold text-ink-900">Planes</h1>
-        {esAdmin && (
-          <button onClick={abrirCrear} className={buttonPrimary}>
-            + Nuevo plan
-          </button>
-        )}
-      </div>
+      <PageHeader
+        titulo="Planes"
+        acciones={
+          esAdmin && (
+            <button onClick={abrirCrear} className={buttonPrimary}>
+              + Nuevo plan
+            </button>
+          )
+        }
+      />
 
       {error && <p className={`mb-4 ${errorBanner}`}>{error}</p>}
 
@@ -180,9 +203,10 @@ export default function PlanesPage() {
                 </button>
                 <button
                   onClick={() => cambiarEstado(plan)}
+                  disabled={cambiandoId === plan.id}
                   className={`flex-1 ${buttonSecondary}`}
                 >
-                  {plan.activo ? "Desactivar" : "Activar"}
+                  {cambiandoId === plan.id ? "..." : plan.activo ? "Desactivar" : "Activar"}
                 </button>
               </div>
             )}
@@ -190,13 +214,17 @@ export default function PlanesPage() {
         ))}
       </div>
 
-      {planes.length === 0 && !error && (
-        <p className="font-mono text-sm text-ink-500">No hay planes registrados todavía.</p>
-      )}
+      {planes.length === 0 && !error && <EmptyState mensaje="No hay planes registrados todavía." />}
 
       {mostrarForm && (
         <div className="fixed inset-0 z-10 flex items-center justify-center bg-ink-900/60 px-4">
-          <div className={modalPanel}>
+          <div
+            ref={modalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={editandoId ? "Editar plan" : "Nuevo plan"}
+            className={modalPanel}
+          >
             <span className="rivet-light left-3 top-3" />
             <span className="rivet-light right-3 top-3" />
             <span className="rivet-light bottom-3 left-3" />
@@ -257,17 +285,13 @@ export default function PlanesPage() {
 
               <div>
                 <label className={labelClass}>Tipo</label>
-                <select
+                <Select
                   value={form.tipo}
-                  onChange={(e) => setForm({ ...form, tipo: e.target.value as TipoPlan })}
-                  className={input}
-                >
-                  {TIPOS.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => setForm({ ...form, tipo: v as TipoPlan })}
+                  options={TIPOS.map((t) => ({ value: t, label: t }))}
+                  placeholder="Selecciona un tipo"
+                  ariaLabel="Tipo"
+                />
               </div>
 
               <div className="flex items-center gap-2">

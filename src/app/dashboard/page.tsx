@@ -4,93 +4,118 @@ import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { getRol } from "@/lib/auth";
 import { errorBanner } from "@/lib/ui";
+import { PageHeader } from "@/components/PageHeader";
+import { SkeletonStats } from "@/components/Skeleton";
 import AdminDashboardCharts from "./_components/AdminDashboardCharts";
+import type { DashboardAdminStatsDTO } from "@/types";
 
 interface Stats {
-  totalUsuarios: number | null; // null = no autorizado a verlo (no-ADMIN)
   totalPlanesActivos: number;
+  totalUsuarios: number | null; // null = no autorizado a verlo (no-ADMIN)
   totalSuscripcionesActivas: number | null;
 }
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null);
+  const [adminStats, setAdminStats] = useState<DashboardAdminStatsDTO | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelado = false;
+
     async function cargarEstadisticas() {
       const rol = getRol();
       const esAdmin = rol === "ADMIN";
 
       try {
-        // Los tres endpoints devuelven Page<T> desde la paginación (3.3) —
+        // Los endpoints de listado devuelven Page<T> desde la paginación (3.3) —
         // el array real está en .content, y totalElements ya viene calculado
         // por Spring Data (más preciso que .content.length si hay más de una
-        // página, ya que .content solo trae los items de la página actual).
+        // página). Las suscripciones activas, en cambio, se derivan del endpoint
+        // único de estadísticas: ingresosPorTipoPlan solo cuenta suscripciones
+        // ACTIVAS (DashboardAdminService.ingresosPorTipoPlan), así que la suma
+        // de cantidadSuscripciones es exactamente el total que antes pedía
+        // /suscripciones?estado=ACTIVA — y de paso el DTO se reutiliza para los
+        // charts, eliminando el fetch duplicado de AdminDashboardCharts.
         const planesReq = api.get<{ totalElements: number }>("/planes", { params: { activo: true } });
 
         const usuariosReq = esAdmin
           ? api.get<{ totalElements: number }>("/usuarios")
           : Promise.resolve(null);
-        const suscripcionesReq = esAdmin
-          ? api.get<{ totalElements: number }>("/suscripciones", { params: { estado: "ACTIVA" } })
+        const adminStatsReq = esAdmin
+          ? api.get<DashboardAdminStatsDTO>("/dashboard/admin/estadisticas")
           : Promise.resolve(null);
 
-        const [planesRes, usuariosRes, suscripcionesRes] = await Promise.all([
+        const [planesRes, usuariosRes, statsRes] = await Promise.all([
           planesReq,
           usuariosReq,
-          suscripcionesReq,
+          adminStatsReq,
         ]);
+        if (cancelado) return;
 
         setStats({
           totalPlanesActivos: planesRes.data.totalElements,
           totalUsuarios: usuariosRes ? usuariosRes.data.totalElements : null,
-          totalSuscripcionesActivas: suscripcionesRes ? suscripcionesRes.data.totalElements : null,
+          totalSuscripcionesActivas: statsRes
+            ? statsRes.data.ingresosPorTipoPlan.reduce(
+                (acc, e) => acc + e.cantidadSuscripciones,
+                0
+              )
+            : null,
         });
+        if (statsRes) setAdminStats(statsRes.data);
       } catch (err) {
-        setError("No se pudieron cargar las estadísticas.");
-        console.error(err);
+        if (!cancelado) {
+          setError("No se pudieron cargar las estadísticas.");
+          console.error(err);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelado) setLoading(false);
       }
     }
 
     cargarEstadisticas();
+
+    return () => {
+      cancelado = true;
+    };
   }, []);
 
   if (loading) {
-    return <p className="font-mono text-sm text-ink-500">Cargando estadísticas...</p>;
-  }
-
-  if (error) {
-    return <p className={errorBanner}>{error}</p>;
+    return <SkeletonStats />;
   }
 
   return (
     <div>
-      <h1 className="mb-1 font-display text-3xl font-bold text-ink-900">Dashboard</h1>
-      <p className="mb-8 text-sm text-ink-500">Resumen general del gimnasio</p>
+      <PageHeader titulo="Dashboard" subtitulo="Resumen general del gimnasio" />
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-        <PlateStat label="Planes activos" value={stats?.totalPlanesActivos} variante="hazard" />
-        <PlateStat
-          label="Usuarios registrados"
-          value={stats?.totalUsuarios}
-          restringido={stats?.totalUsuarios === null}
-          variante="moss"
-        />
-        <PlateStat
-          label="Suscripciones activas"
-          value={stats?.totalSuscripcionesActivas}
-          restringido={stats?.totalSuscripcionesActivas === null}
-          variante="rust"
-        />
-      </div>
+      {error && <p className={`mb-4 ${errorBanner}`}>{error}</p>}
 
-      {getRol() === "ADMIN" && (
-        <div className="mt-8">
-          <AdminDashboardCharts />
-        </div>
+      {stats && (
+        <>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+            <PlateStat label="Planes activos" value={stats.totalPlanesActivos} variante="hazard" />
+            <PlateStat
+              label="Usuarios registrados"
+              value={stats.totalUsuarios}
+              restringido={stats.totalUsuarios === null}
+              variante="moss"
+            />
+            <PlateStat
+              label="Suscripciones activas"
+              value={stats.totalSuscripcionesActivas}
+              restringido={stats.totalSuscripcionesActivas === null}
+              variante="rust"
+            />
+          </div>
+
+          {getRol() === "ADMIN" && adminStats && (
+            <div className="mt-8">
+              <AdminDashboardCharts stats={adminStats} />
+            </div>
+          )}
+        </>
       )}
     </div>
   );

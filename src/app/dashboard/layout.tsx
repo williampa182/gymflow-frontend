@@ -4,6 +4,10 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { loadSession, getRol, hasRole, logout } from "@/lib/auth";
+import { useFocusTrap } from "@/lib/useFocusTrap";
+import { ToastProvider } from "@/lib/toast";
+import { Skeleton } from "@/components/Skeleton";
+import { ToastHost } from "@/components/ToastHost";
 import ChatWidget from "./_components/ChatWidget";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -12,6 +16,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [checked, setChecked] = useState(false);
   const [nombre, setNombre] = useState<string | null>(null);
   const [menuAbierto, setMenuAbierto] = useState(false);
+  const drawerRef = useFocusTrap(menuAbierto, () => setMenuAbierto(false));
 
   useEffect(() => {
     let cancelado = false;
@@ -43,15 +48,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!checked) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-concrete-100">
-        <p className="font-mono text-sm text-ink-500">Cargando...</p>
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-8 w-32" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-concrete-100 md:flex">
+    <ToastProvider>
+      <div className="min-h-screen bg-concrete-100 md:flex">
       {/* Barra superior — solo visible en mobile */}
-      <div className="flex items-center justify-between border-b border-concrete-300 bg-ink-900 px-4 py-3 md:hidden">
+      <div className="relative border-b border-concrete-300 bg-ink-900 px-4 py-3 md:hidden">
+        <div className="hazard-stripe absolute bottom-0 left-0 right-0 h-1" />
+        <div className="flex items-center justify-between">
         <span className="font-display text-xl font-bold tracking-tight text-concrete-50">
           GYMFLOW
         </span>
@@ -64,6 +74,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
           </svg>
         </button>
+        </div>
       </div>
 
       {/* Overlay + drawer — solo en mobile, cuando está abierto */}
@@ -73,7 +84,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             className="absolute inset-0 bg-ink-900/70"
             onClick={() => setMenuAbierto(false)}
           />
-          <aside className="relative flex h-full w-64 flex-col bg-ink-900 text-concrete-100">
+          <aside ref={drawerRef} className="relative flex h-full w-64 flex-col bg-ink-900 text-concrete-100">
             <SidebarContent nombre={nombre} onNavigate={() => setMenuAbierto(false)} />
           </aside>
         </div>
@@ -89,7 +100,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </main>
 
       <ChatWidget />
-    </div>
+      <ToastHost />
+      </div>
+    </ToastProvider>
   );
 }
 

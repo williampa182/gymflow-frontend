@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { ToastProvider } from "@/lib/toast";
+import { ToastHost } from "@/components/ToastHost";
 
 // ─── Mocks ─────────────────────────────────────────────────────────
 // Mockeamos `@/lib/api` (instancia axios) para que `api.get` devuelva lo
@@ -25,7 +27,19 @@ vi.mock("@/lib/auth", () => ({
 }));
 
 import api from "@/lib/api";
+import { hasRole } from "@/lib/auth";
 import PlanesPage from "./page";
+
+// La página usa useToast(); el provider + host son requisito del árbol
+// (viven en el layout del dashboard en producción).
+function renderPlanes() {
+  return render(
+    <ToastProvider>
+      <PlanesPage />
+      <ToastHost />
+    </ToastProvider>
+  );
+}
 
 // ─── Helpers: shape real del Page<T> de Spring Data ─────────────────
 // Spring serializa `Page<T>` exactamente con esta forma. Traemos todos
@@ -97,7 +111,7 @@ describe("dashboard/planes/page.tsx", () => {
     // Contrato actual (post-3.3): Spring Data Page<T>, array en `.content`.
     vi.mocked(api.get).mockResolvedValueOnce(pageResponse(plansMock));
 
-    render(<PlanesPage />);
+    renderPlanes();
 
     await waitFor(() => {
       expect(screen.getByText("Plan Mensual Básico")).toBeInTheDocument();
@@ -118,7 +132,7 @@ describe("dashboard/planes/page.tsx", () => {
     // TypeError antes de renderizar, y este test falla en rojo.
     vi.mocked(api.get).mockResolvedValueOnce(pageResponse(plansMock));
 
-    render(<PlanesPage />);
+    renderPlanes();
 
     // El assert real: los nombres de planes deben aparecer en el DOM, lo que
     // solo es posible si el código leyó `.content` correctamente.
@@ -131,7 +145,7 @@ describe("dashboard/planes/page.tsx", () => {
   it("maneja respuesta vacía sin crashear", async () => {
     vi.mocked(api.get).mockResolvedValueOnce(pageResponse([]));
 
-    render(<PlanesPage />);
+    renderPlanes();
 
     await waitFor(() => {
       expect(
@@ -143,12 +157,47 @@ describe("dashboard/planes/page.tsx", () => {
   it("muestra mensaje de error si el backend falla", async () => {
     vi.mocked(api.get).mockRejectedValueOnce(new Error("Network error"));
 
-    render(<PlanesPage />);
+    renderPlanes();
 
     await waitFor(() => {
       expect(
         screen.getByText("No se pudieron cargar los planes.")
       ).toBeInTheDocument();
+    });
+  });
+
+  describe("acciones de admin", () => {
+    it("deshabilita el toggle mientras corre el PATCH y evita el doble disparo", async () => {
+      vi.mocked(hasRole).mockReturnValue(true);
+      vi.mocked(api.get).mockResolvedValue(pageResponse(plansMock));
+      // PATCH que nunca resuelve: el botón queda en estado pendiente.
+      vi.mocked(api.patch).mockReturnValue(new Promise(() => {}));
+
+      renderPlanes();
+
+      const botones = await screen.findAllByRole("button", { name: "Desactivar" });
+      const boton = botones[0];
+      fireEvent.click(boton);
+      fireEvent.click(boton);
+
+      expect(api.patch).toHaveBeenCalledTimes(1);
+      expect(boton).toBeDisabled();
+      expect(boton).toHaveTextContent("...");
+    });
+
+    it("avisa con un toast cuando se desactiva un plan", async () => {
+      vi.mocked(hasRole).mockReturnValue(true);
+      vi.mocked(api.get).mockResolvedValue(pageResponse(plansMock));
+      vi.mocked(api.patch).mockResolvedValue({ data: {} });
+
+      renderPlanes();
+
+      const botones = await screen.findAllByRole("button", { name: "Desactivar" });
+      fireEvent.click(botones[0]);
+
+      await waitFor(() => {
+        expect(screen.getByText("Plan desactivado.")).toBeInTheDocument();
+      });
     });
   });
 });

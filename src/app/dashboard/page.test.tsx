@@ -49,6 +49,32 @@ function pageTotal(totalElements: number) {
   };
 }
 
+// Shape de GET /dashboard/admin/estadisticas. La tarjeta "Suscripciones
+// activas" se deriva de la suma de cantidadSuscripciones de
+// ingresosPorTipoPlan (el backend solo cuenta ACTIVA ahí).
+function adminStats(suscripcionesActivas: number) {
+  return {
+    data: {
+      usuariosPorRol: [
+        { rol: "ADMIN" as const, cantidad: 1 },
+        { rol: "ENTRENADOR" as const, cantidad: 4 },
+        { rol: "CLIENTE" as const, cantidad: 7 },
+      ],
+      ingresosPorTipoPlan: [
+        { tipoPlan: "MENSUAL" as const, ingresoEstimado: 100, cantidadSuscripciones: 3 },
+        { tipoPlan: "TRIMESTRAL" as const, ingresoEstimado: 200, cantidadSuscripciones: 2 },
+        { tipoPlan: "SEMESTRAL" as const, ingresoEstimado: 300, cantidadSuscripciones: 2 },
+        { tipoPlan: "ANUAL" as const, ingresoEstimado: 400, cantidadSuscripciones: 0 },
+      ],
+      suscripcionesPorEstado: [
+        { estado: "ACTIVA" as const, cantidad: suscripcionesActivas },
+        { estado: "VENCIDA" as const, cantidad: 1 },
+        { estado: "CANCELADA" as const, cantidad: 1 },
+      ],
+    },
+  };
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   vi.spyOn(console, "error").mockImplementation(() => {});
@@ -59,12 +85,14 @@ describe("dashboard/page.tsx — rol ADMIN", () => {
     vi.mocked(getRol).mockReturnValue("ADMIN");
   });
 
-  it("renderiza los tres PlateStat con totalElements cuando el backend devuelve Page<T>", async () => {
+  it("renderiza los tres PlateStat: /planes y /usuarios con totalElements, suscripciones activas derivadas del endpoint único de stats", async () => {
     // /planes?activo=true → totalElements 5
+    // /usuarios → totalElements 12
+    // /dashboard/admin/estadisticas → 3+2+2+0 = 7 suscripciones activas
     vi.mocked(api.get)
-      .mockResolvedValueOnce(pageTotal(5)) // /planes?activo=true
-      .mockResolvedValueOnce(pageTotal(12)) // /usuarios
-      .mockResolvedValueOnce(pageTotal(7)); // /suscripciones?estado=ACTIVA
+      .mockResolvedValueOnce(pageTotal(5))
+      .mockResolvedValueOnce(pageTotal(12))
+      .mockResolvedValueOnce(adminStats(7));
 
     render(<DashboardPage />);
 
@@ -90,7 +118,7 @@ describe("dashboard/page.tsx — rol ADMIN", () => {
     vi.mocked(api.get)
       .mockResolvedValueOnce(pageTotal(5))
       .mockResolvedValueOnce(pageTotal(12))
-      .mockResolvedValueOnce(pageTotal(7));
+      .mockResolvedValueOnce(adminStats(7));
 
     render(<DashboardPage />);
 
@@ -102,11 +130,11 @@ describe("dashboard/page.tsx — rol ADMIN", () => {
     });
   });
 
-  it("muestra AdminDashboardCharts solo para ADMIN", async () => {
+  it("muestra AdminDashboardCharts solo para ADMIN y le pasa los stats", async () => {
     vi.mocked(api.get)
       .mockResolvedValueOnce(pageTotal(5))
       .mockResolvedValueOnce(pageTotal(12))
-      .mockResolvedValueOnce(pageTotal(7));
+      .mockResolvedValueOnce(adminStats(7));
 
     render(<DashboardPage />);
 

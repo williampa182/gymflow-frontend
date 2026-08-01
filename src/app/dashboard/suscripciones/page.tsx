@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { hasRole } from "@/lib/auth";
@@ -12,6 +12,12 @@ import {
   UsuarioResponseDTO,
 } from "@/types";
 import axios from "axios";
+import { Select } from "@/components/Select";
+import { useFocusTrap } from "@/lib/useFocusTrap";
+import { useToast } from "@/lib/toast";
+import { PageHeader } from "@/components/PageHeader";
+import { EmptyState } from "@/components/EmptyState";
+import { SkeletonFilas } from "@/components/Skeleton";
 import {
   input,
   label as labelClass,
@@ -36,6 +42,7 @@ function hoyISO() {
 
 export default function SuscripcionesPage() {
   const router = useRouter();
+  const { notificar } = useToast();
   const [autorizado, setAutorizado] = useState(false);
 
   useEffect(() => {
@@ -63,6 +70,24 @@ export default function SuscripcionesPage() {
   const [formError, setFormError] = useState<string | null>(null);
 
   const [cancelandoId, setCancelandoId] = useState<number | null>(null);
+  const [confirmandoId, setConfirmandoId] = useState<number | null>(null);
+  const confirmarTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // El focus trap vive en el modal de creación — mismo patrón que planes.
+  const modalRef = useFocusTrap(mostrarForm, cerrarForm);
+
+  // El timeout evita que el botón quede pegado en "¿Seguro?" para siempre.
+  useEffect(() => {
+    return () => {
+      if (confirmarTimeoutRef.current) clearTimeout(confirmarTimeoutRef.current);
+    };
+  }, []);
+
+  function pedirConfirmacion(id: number) {
+    setConfirmandoId(id);
+    if (confirmarTimeoutRef.current) clearTimeout(confirmarTimeoutRef.current);
+    confirmarTimeoutRef.current = setTimeout(() => setConfirmandoId(null), 4000);
+  }
 
   async function cargarSuscripciones() {
     setLoading(true);
@@ -124,6 +149,7 @@ export default function SuscripcionesPage() {
     try {
       await api.post("/suscripciones", form);
       cerrarForm();
+      notificar("exito", "Suscripción creada.");
       await cargarSuscripciones();
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.data && typeof err.response.data === "object") {
@@ -141,12 +167,14 @@ export default function SuscripcionesPage() {
     setCancelandoId(id);
     try {
       await api.patch(`/suscripciones/${id}/cancelar`);
+      notificar("exito", "Suscripción cancelada.");
       await cargarSuscripciones();
     } catch (err) {
       console.error(err);
       setError("No se pudo cancelar la suscripción.");
     } finally {
       setCancelandoId(null);
+      setConfirmandoId(null);
     }
   }
 
@@ -162,31 +190,31 @@ export default function SuscripcionesPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-display text-3xl font-bold text-ink-900">Suscripciones</h1>
-        <div className="flex gap-2">
-          <select
-            value={filtroEstado}
-            onChange={(e) => setFiltroEstado(e.target.value as EstadoSuscripcion | "")}
-            className={`${input} w-auto`}
-          >
-            <option value="">Todos los estados</option>
-            {ESTADOS.map((e) => (
-              <option key={e} value={e}>
-                {e}
-              </option>
-            ))}
-          </select>
-          <button onClick={abrirCrear} className={buttonPrimary}>
-            + Nueva suscripción
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        titulo="Suscripciones"
+        acciones={
+          <>
+            <Select
+              value={filtroEstado}
+              onChange={(v) => setFiltroEstado(v as EstadoSuscripcion | "")}
+              options={ESTADOS.map((e) => ({ value: e, label: e }))}
+              placeholder="Todos los estados"
+              ariaLabel="Filtrar por estado"
+              className="w-auto"
+            />
+            <button onClick={abrirCrear} className={buttonPrimary}>
+              + Nueva suscripción
+            </button>
+          </>
+        }
+      />
 
       {error && <p className={`mb-4 ${errorBanner}`}>{error}</p>}
 
       {loading ? (
-        <p className="font-mono text-sm text-ink-500">Cargando suscripciones...</p>
+        <div className={tableWrap}>
+          <SkeletonFilas filas={5} />
+        </div>
       ) : (
         <div className={tableWrap}>
           <table className="w-full min-w-[720px] text-left text-sm">
@@ -217,11 +245,23 @@ export default function SuscripcionesPage() {
                   <td className="px-4 py-3 text-right">
                     {s.estado === "ACTIVA" && (
                       <button
-                        onClick={() => cancelar(s.id)}
+                        onClick={() =>
+                          confirmandoId === s.id
+                            ? cancelar(s.id)
+                            : pedirConfirmacion(s.id)
+                        }
                         disabled={cancelandoId === s.id}
-                        className={buttonDanger}
+                        className={
+                          confirmandoId === s.id
+                            ? "rounded-md bg-rust-600 px-3 py-1 text-xs font-medium text-concrete-50 transition hover:bg-rust-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            : buttonDanger
+                        }
                       >
-                        {cancelandoId === s.id ? "..." : "Cancelar"}
+                        {cancelandoId === s.id
+                          ? "..."
+                          : confirmandoId === s.id
+                            ? "¿Seguro?"
+                            : "Cancelar"}
                       </button>
                     )}
                   </td>
@@ -231,16 +271,23 @@ export default function SuscripcionesPage() {
           </table>
 
           {suscripciones.length === 0 && (
-            <p className="px-4 py-6 text-center font-mono text-sm text-ink-500">
-              No hay suscripciones con ese filtro.
-            </p>
+            <EmptyState
+              mensaje="No hay suscripciones con ese filtro."
+              variante={filtroEstado ? "sinResultados" : "sinDatos"}
+            />
           )}
         </div>
       )}
 
       {mostrarForm && (
         <div className="fixed inset-0 z-10 flex items-center justify-center bg-ink-900/60 px-4">
-          <div className={modalPanel}>
+          <div
+            ref={modalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Nueva suscripción"
+            className={modalPanel}
+          >
             <span className="rivet-light left-3 top-3" />
             <span className="rivet-light right-3 top-3" />
             <span className="rivet-light bottom-3 left-3" />
@@ -255,19 +302,16 @@ export default function SuscripcionesPage() {
             <form onSubmit={handleSubmit} className="space-y-3">
               <div>
                 <label className={labelClass}>Usuario</label>
-                <select
-                  required
-                  value={form.usuarioId || ""}
-                  onChange={(e) => setForm({ ...form, usuarioId: Number(e.target.value) })}
-                  className={input}
-                >
-                  <option value="">Selecciona un usuario</option>
-                  {usuarios.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.nombre} ({u.email}) · {u.rol}
-                    </option>
-                  ))}
-                </select>
+                <Select
+                  value={String(form.usuarioId || "")}
+                  onChange={(v) => setForm({ ...form, usuarioId: Number(v) })}
+                  options={usuarios.map((u) => ({
+                    value: String(u.id),
+                    label: `${u.nombre} (${u.email}) · ${u.rol}`,
+                  }))}
+                  placeholder="Selecciona un usuario"
+                  ariaLabel="Usuario"
+                />
                 {usuarios.length === 0 && (
                   <p className="mt-1 font-mono text-xs text-ink-500">
                     No hay usuarios registrados.
@@ -277,19 +321,16 @@ export default function SuscripcionesPage() {
 
               <div>
                 <label className={labelClass}>Plan</label>
-                <select
-                  required
-                  value={form.planId || ""}
-                  onChange={(e) => setForm({ ...form, planId: Number(e.target.value) })}
-                  className={input}
-                >
-                  <option value="">Selecciona un plan</option>
-                  {planes.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.nombre} — ${p.precio.toLocaleString("es-CO")} ({p.duracionDias} días)
-                    </option>
-                  ))}
-                </select>
+                <Select
+                  value={String(form.planId || "")}
+                  onChange={(v) => setForm({ ...form, planId: Number(v) })}
+                  options={planes.map((p) => ({
+                    value: String(p.id),
+                    label: `${p.nombre} — $${p.precio.toLocaleString("es-CO")} (${p.duracionDias} días)`,
+                  }))}
+                  placeholder="Selecciona un plan"
+                  ariaLabel="Plan"
+                />
               </div>
 
               <div>

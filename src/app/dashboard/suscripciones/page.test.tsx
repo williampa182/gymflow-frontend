@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { ToastProvider } from "@/lib/toast";
+import { ToastHost } from "@/components/ToastHost";
 
 // ─── Mocks ─────────────────────────────────────────────────────────
 vi.mock("@/lib/api", () => ({
@@ -27,6 +29,17 @@ vi.mock("next/navigation", () => ({
 
 import api from "@/lib/api";
 import SuscripcionesPage from "./page";
+
+// La página usa useToast(); el provider + host son requisito del árbol
+// (viven en el layout del dashboard en producción).
+function renderSuscripciones() {
+  return render(
+    <ToastProvider>
+      <SuscripcionesPage />
+      <ToastHost />
+    </ToastProvider>
+  );
+}
 
 // ─── Helpers: shape real del Page<T> de Spring Data ─────────────────
 function pageResponse<T>(content: T[], totalElements = content.length) {
@@ -88,7 +101,7 @@ describe("dashboard/suscripciones/page.tsx", () => {
   it("renderiza la lista de suscripciones cuando el backend devuelve Page<SuscripcionResponseDTO>", async () => {
     vi.mocked(api.get).mockResolvedValueOnce(pageResponse(SUSCRIPCIONES_MOCK));
 
-    render(<SuscripcionesPage />);
+    renderSuscripciones();
 
     await waitFor(() => {
       expect(screen.getByText("Ana García")).toBeInTheDocument();
@@ -110,7 +123,7 @@ describe("dashboard/suscripciones/page.tsx", () => {
     // crashea con TypeError y este test falla en rojo.
     vi.mocked(api.get).mockResolvedValueOnce(pageResponse(SUSCRIPCIONES_MOCK));
 
-    render(<SuscripcionesPage />);
+    renderSuscripciones();
 
     await waitFor(() => {
       expect(screen.getByText("Ana García")).toBeInTheDocument();
@@ -121,7 +134,7 @@ describe("dashboard/suscripciones/page.tsx", () => {
   it("maneja respuesta vacía sin crashear", async () => {
     vi.mocked(api.get).mockResolvedValueOnce(pageResponse([]));
 
-    render(<SuscripcionesPage />);
+    renderSuscripciones();
 
     await waitFor(() => {
       expect(
@@ -133,12 +146,63 @@ describe("dashboard/suscripciones/page.tsx", () => {
   it("muestra mensaje de error si el backend falla", async () => {
     vi.mocked(api.get).mockRejectedValueOnce(new Error("Network error"));
 
-    render(<SuscripcionesPage />);
+    renderSuscripciones();
 
     await waitFor(() => {
       expect(
         screen.getByText("No se pudieron cargar las suscripciones.")
       ).toBeInTheDocument();
+    });
+  });
+
+  describe("flujo de cancelación", () => {
+    it("no cancela con el primer click: exige confirmación explícita", async () => {
+      vi.mocked(api.get).mockResolvedValue(pageResponse(SUSCRIPCIONES_MOCK));
+      vi.mocked(api.patch).mockResolvedValue({ data: {} });
+
+      renderSuscripciones();
+
+      const botonCancelar = await screen.findByRole("button", { name: "Cancelar" });
+      fireEvent.click(botonCancelar);
+
+      expect(api.patch).not.toHaveBeenCalled();
+      expect(screen.getByRole("button", { name: "¿Seguro?" })).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole("button", { name: "¿Seguro?" }));
+
+      await waitFor(() => {
+        expect(api.patch).toHaveBeenCalledWith("/suscripciones/1/cancelar");
+      });
+    });
+
+    it("avisa con un toast cuando la suscripción se cancela", async () => {
+      vi.mocked(api.get).mockResolvedValue(pageResponse(SUSCRIPCIONES_MOCK));
+      vi.mocked(api.patch).mockResolvedValue({ data: {} });
+
+      renderSuscripciones();
+
+      const botonCancelar = await screen.findByRole("button", { name: "Cancelar" });
+      fireEvent.click(botonCancelar);
+      fireEvent.click(screen.getByRole("button", { name: "¿Seguro?" }));
+
+      await waitFor(() => {
+        expect(screen.getByText("Suscripción cancelada.")).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("modal de creación", () => {
+    it("cierra con Escape (focus trap)", async () => {
+      vi.mocked(api.get).mockResolvedValue(pageResponse(SUSCRIPCIONES_MOCK));
+
+      renderSuscripciones();
+
+      fireEvent.click(await screen.findByRole("button", { name: "+ Nueva suscripción" }));
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+      fireEvent.keyDown(document, { key: "Escape" });
+
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
   });
 });
