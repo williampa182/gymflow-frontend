@@ -8,6 +8,10 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  // L2 (revisión 2026-08-01): sin timeout un request colgado queda
+  // indefinido en el navegador. 15s cubre las operaciones normales;
+  // el chat (LLM) usa 30s explícitos en su llamada.
+  timeout: 15000,
 });
 
 // La cookie "token" viaja automáticamente en cada request del mismo origen,
