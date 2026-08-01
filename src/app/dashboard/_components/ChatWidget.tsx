@@ -4,19 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import type { AxiosError } from "axios";
 import api from "@/lib/api";
 import { buttonPrimary } from "@/lib/ui";
+import { cargarMensajesChat, guardarMensajesChat } from "@/lib/chatStorage";
+import type { MensajeChat } from "@/lib/chatStorage";
 import type { ChatRequestDTO, ChatResponseDTO } from "@/types";
 
 const MAX_MENSAJE = 2000;
 
-interface Mensaje {
-  id: string;
-  rol: "usuario" | "asistente";
-  texto: string;
-}
-
 export default function ChatWidget() {
   const [abierto, setAbierto] = useState(false);
-  const [mensajes, setMensajes] = useState<Mensaje[]>([]);
+  const [mensajes, setMensajes] = useState<MensajeChat[]>(cargarMensajesChat);
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,11 +23,15 @@ export default function ChatWidget() {
     if (el) el.scrollTop = el.scrollHeight;
   }, [mensajes, enviando]);
 
+  useEffect(() => {
+    guardarMensajesChat(mensajes);
+  }, [mensajes]);
+
   async function enviar() {
     const mensaje = texto.trim();
     if (!mensaje || mensaje.length > MAX_MENSAJE || enviando) return;
 
-    const propio: Mensaje = { id: crypto.randomUUID(), rol: "usuario", texto: mensaje };
+    const propio: MensajeChat = { id: crypto.randomUUID(), rol: "usuario", texto: mensaje };
     setMensajes((prev) => [...prev, propio]);
     setTexto("");
     setError(null);
@@ -39,7 +39,7 @@ export default function ChatWidget() {
 
     try {
       const body: ChatRequestDTO = { mensaje };
-      const { data } = await api.post<ChatResponseDTO>("/chat", body);
+      const { data } = await api.post<ChatResponseDTO>("/chat", body, { timeout: 30000 });
       setMensajes((prev) => [
         ...prev,
         { id: crypto.randomUUID(), rol: "asistente", texto: data.respuesta },
@@ -132,6 +132,9 @@ export default function ChatWidget() {
           )}
 
           <div className="border-t border-concrete-300 bg-concrete-50 p-3">
+            <p className="mb-2 font-mono text-[10px] text-ink-500">
+              La conversación la procesa un proveedor externo (Gemini). No compartas datos personales.
+            </p>
             <div className="flex items-end gap-2">
               <textarea
                 value={texto}

@@ -1,4 +1,5 @@
 import { Rol } from "@/types";
+import { limpiarMensajesChat } from "./chatStorage";
 
 interface Session {
   id: number;
@@ -91,6 +92,7 @@ export async function loadSession(): Promise<Session | null> {
 
 export async function logout() {
   clearSessionCache();
+  limpiarMensajesChat();
   await fetch("/api/auth/logout", { method: "POST" });
   window.location.href = "/";
 }

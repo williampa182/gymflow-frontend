@@ -14,9 +14,11 @@ vi.mock("@/lib/api", () => ({
 
 import api from "@/lib/api";
 import ChatWidget from "./ChatWidget";
+import { CLAVE_CHAT_MENSAJES } from "@/lib/chatStorage";
 
 beforeEach(() => {
   vi.clearAllMocks();
+  window.sessionStorage.clear();
 });
 
 async function abrirYEscribir(texto: string) {
@@ -41,12 +43,19 @@ describe("ChatWidget", () => {
     expect(screen.getByRole("dialog", { name: /chat de soporte gymflow/i })).toBeInTheDocument();
   });
 
+  it("muestra el aviso de proveedor externo al abrir el chat", async () => {
+    const user = userEvent.setup();
+    render(<ChatWidget />);
+    await user.click(screen.getByRole("button", { name: /abrir chat de soporte/i }));
+    expect(screen.getByText(/la conversación la procesa un proveedor externo/i)).toBeInTheDocument();
+  });
+
   it("envía el mensaje a /chat y muestra la respuesta del backend", async () => {
     vi.mocked(api.post).mockResolvedValueOnce({ data: { respuesta: "El plan mensual cuesta $50.000" } });
 
     await abrirYEscribir("¿Cuánto cuesta el plan mensual?");
 
-    expect(api.post).toHaveBeenCalledWith("/chat", { mensaje: "¿Cuánto cuesta el plan mensual?" });
+    expect(api.post).toHaveBeenCalledWith("/chat", { mensaje: "¿Cuánto cuesta el plan mensual?" }, { timeout: 30000 });
     await waitFor(() => {
       expect(screen.getByText("El plan mensual cuesta $50.000")).toBeInTheDocument();
     });
@@ -121,5 +130,54 @@ describe("ChatWidget", () => {
 
     expect(screen.getByRole("button", { name: /^enviar$/i })).toBeDisabled();
     expect(api.post).not.toHaveBeenCalled();
+  });
+
+  it("persiste la conversación en sessionStorage y la restaura al volver a montar", async () => {
+    vi.mocked(api.post).mockResolvedValueOnce({ data: { respuesta: "Respuesta guardada" } });
+
+    const user = userEvent.setup();
+    const primera = render(<ChatWidget />);
+    await user.click(screen.getByRole("button", { name: /abrir chat de soporte/i }));
+    await user.type(screen.getByRole("textbox", { name: /mensaje para soporte/i }), "¿cuánto cuesta?");
+    await user.click(screen.getByRole("button", { name: /^enviar$/i }));
+    await waitFor(() => {
+      expect(screen.getByText("Respuesta guardada")).toBeInTheDocument();
+    });
+    primera.unmount();
+
+    render(<ChatWidget />);
+    await user.click(screen.getByRole("button", { name: /abrir chat de soporte/i }));
+
+    expect(screen.getByText("¿cuánto cuesta?")).toBeInTheDocument();
+    expect(screen.getByText("Respuesta guardada")).toBeInTheDocument();
+    expect(api.post).toHaveBeenCalledTimes(1);
+  });
+
+  it("ignora datos corruptos en sessionStorage y arranca limpio", async () => {
+    window.sessionStorage.setItem(CLAVE_CHAT_MENSAJES, "{esto no es json");
+
+    const user = userEvent.setup();
+    render(<ChatWidget />);
+    await user.click(screen.getByRole("button", { name: /abrir chat de soporte/i }));
+
+    expect(screen.getByText(/hola. preguntame algo/i)).toBeInTheDocument();
+  });
+
+  it("filtra mensajes con forma inválida al hidratar desde sessionStorage", async () => {
+    window.sessionStorage.setItem(
+      CLAVE_CHAT_MENSAJES,
+      JSON.stringify([
+        { id: "1", rol: "usuario", texto: "mensaje válido" },
+        { id: "2", rol: "bot", texto: "rol inválido" },
+        { rol: "asistente" },
+      ])
+    );
+
+    const user = userEvent.setup();
+    render(<ChatWidget />);
+    await user.click(screen.getByRole("button", { name: /abrir chat de soporte/i }));
+
+    expect(screen.getByText("mensaje válido")).toBeInTheDocument();
+    expect(screen.queryByText(/rol inválido/)).not.toBeInTheDocument();
   });
 });
