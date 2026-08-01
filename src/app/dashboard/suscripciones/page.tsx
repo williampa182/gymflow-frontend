@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import api from "@/lib/api";
-import { hasRole } from "@/lib/auth";
 import {
   EstadoSuscripcion,
   PlanResponseDTO,
@@ -15,6 +13,9 @@ import axios from "axios";
 import { Select } from "@/components/Select";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 import { useToast } from "@/lib/toast";
+import { useRequireRole } from "@/lib/useRequireRole";
+import { usePageTitle } from "@/lib/usePageTitle";
+import { formatFecha, formatMoneda } from "@/lib/format";
 import { PageHeader } from "@/components/PageHeader";
 import { EmptyState } from "@/components/EmptyState";
 import { SkeletonFilas } from "@/components/Skeleton";
@@ -41,17 +42,9 @@ function hoyISO() {
 }
 
 export default function SuscripcionesPage() {
-  const router = useRouter();
+  usePageTitle("Suscripciones");
   const { notificar } = useToast();
-  const [autorizado, setAutorizado] = useState(false);
-
-  useEffect(() => {
-    if (!hasRole("ADMIN")) {
-      router.replace("/dashboard");
-      return;
-    }
-    setAutorizado(true);
-  }, [router]);
+  const autorizado = useRequireRole("ADMIN");
 
   const [suscripciones, setSuscripciones] = useState<SuscripcionResponseDTO[]>([]);
   const [filtroEstado, setFiltroEstado] = useState<EstadoSuscripcion | "">("");
@@ -234,10 +227,10 @@ export default function SuscripcionesPage() {
                   <td className="px-4 py-3 text-ink-900">{s.nombreUsuario}</td>
                   <td className="px-4 py-3 text-ink-700">{s.nombrePlan}</td>
                   <td className="px-4 py-3 font-mono text-xs text-ink-500">
-                    {new Date(s.fechaInicio).toLocaleDateString("es-CO")}
+                    {formatFecha(s.fechaInicio)}
                   </td>
                   <td className="px-4 py-3 font-mono text-xs text-ink-500">
-                    {new Date(s.fechaFin).toLocaleDateString("es-CO")}
+                    {formatFecha(s.fechaFin)}
                   </td>
                   <td className="px-4 py-3">
                     <span className={badgeEstado(estadoVariante[s.estado])}>{s.estado}</span>
@@ -326,7 +319,7 @@ export default function SuscripcionesPage() {
                   onChange={(v) => setForm({ ...form, planId: Number(v) })}
                   options={planes.map((p) => ({
                     value: String(p.id),
-                    label: `${p.nombre} — $${p.precio.toLocaleString("es-CO")} (${p.duracionDias} días)`,
+                    label: `${p.nombre} — ${formatMoneda(p.precio)} (${p.duracionDias} días)`,
                   }))}
                   placeholder="Selecciona un plan"
                   ariaLabel="Plan"

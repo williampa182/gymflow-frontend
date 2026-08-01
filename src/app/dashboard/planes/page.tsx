@@ -8,6 +8,8 @@ import axios from "axios";
 import { Select } from "@/components/Select";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 import { useToast } from "@/lib/toast";
+import { usePageTitle } from "@/lib/usePageTitle";
+import { formatMoneda } from "@/lib/format";
 import { PageHeader } from "@/components/PageHeader";
 import { EmptyState } from "@/components/EmptyState";
 import { SkeletonTarjetas } from "@/components/Skeleton";
@@ -37,6 +39,7 @@ const FORM_VACIO: PlanRequestDTO = {
 };
 
 export default function PlanesPage() {
+  usePageTitle("Planes");
   const esAdmin = hasRole("ADMIN");
   const { notificar } = useToast();
 
@@ -183,7 +186,7 @@ export default function PlanesPage() {
             )}
 
             <p className="mb-1 font-display text-3xl font-bold text-ink-900">
-              ${plan.precio.toLocaleString("es-CO")}
+              {formatMoneda(plan.precio)}
             </p>
             <p className="mb-3 font-mono text-xs text-ink-500">
               {plan.tipo} · {plan.duracionDias} días

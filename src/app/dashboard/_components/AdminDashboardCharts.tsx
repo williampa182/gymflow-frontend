@@ -13,6 +13,7 @@ import {
   LabelList,
 } from "recharts";
 import { card } from "@/lib/ui";
+import { formatMoneda } from "@/lib/format";
 import type {
   Rol,
   TipoPlan,
@@ -75,13 +76,6 @@ function ChartTooltip({
     </div>
   );
 }
-
-const moneda = (v: number) =>
-  v.toLocaleString("es-CO", {
-    style: "currency",
-    currency: "COP",
-    maximumFractionDigits: 0,
-  });
 
 // ─── Componente principal ─────────────────────────────────────────
 // Presentacional: recibe los stats por prop desde dashboard/page.tsx,
@@ -206,7 +200,7 @@ export default function AdminDashboardCharts({
         className={`${card} lg:col-span-2 flex flex-col`}
         role="img"
         aria-label={`Ingresos estimados por tipo de plan: ${dataIngresos
-          .map((d) => `${d.nombre} ${moneda(d.ingreso)}`)
+          .map((d) => `${d.nombre} ${formatMoneda(d.ingreso)}`)
           .join(", ")}`}
       >
         <header className="mb-4">
@@ -242,13 +236,13 @@ export default function AdminDashboardCharts({
                 axisLine={false}
                 tickLine={false}
                 tickFormatter={(v) =>
-                  moneda(Number(v)).replace(/\s?\w+$/, "")
+                  formatMoneda(Number(v)).replace(/\s?\w+$/, "")
                 }
                 width={70}
               />
               <Tooltip
                 cursor={{ fill: PALETA.concrete300, opacity: 0.25 }}
-                content={<ChartTooltip formatter={moneda} />}
+                content={<ChartTooltip formatter={formatMoneda} />}
               />
               <Bar dataKey="ingreso" radius={[4, 4, 0, 0]} maxBarSize={90}>
                 {dataIngresos.map((d) => (
@@ -257,7 +251,7 @@ export default function AdminDashboardCharts({
                 <LabelList
                   dataKey="ingreso"
                   position="top"
-                  formatter={(v) => moneda(Number(v))}
+                  formatter={(v) => formatMoneda(Number(v))}
                   style={{
                     fill: PALETA.ink900,
                     fontSize: 11,

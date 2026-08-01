@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import api from "@/lib/api";
-import { hasRole } from "@/lib/auth";
 import { Rol, UsuarioResponseDTO } from "@/types";
 import { Select } from "@/components/Select";
 import { useToast } from "@/lib/toast";
+import { useRequireRole } from "@/lib/useRequireRole";
+import { usePageTitle } from "@/lib/usePageTitle";
+import { formatFecha } from "@/lib/format";
 import { PageHeader } from "@/components/PageHeader";
 import { EmptyState } from "@/components/EmptyState";
 import { SkeletonFilas } from "@/components/Skeleton";
@@ -23,17 +24,9 @@ import {
 const ROLES: Rol[] = ["ADMIN", "ENTRENADOR", "CLIENTE"];
 
 export default function UsuariosPage() {
-  const router = useRouter();
+  usePageTitle("Usuarios");
   const { notificar } = useToast();
-  const [autorizado, setAutorizado] = useState(false);
-
-  useEffect(() => {
-    if (!hasRole("ADMIN")) {
-      router.replace("/dashboard");
-      return;
-    }
-    setAutorizado(true);
-  }, [router]);
+  const autorizado = useRequireRole("ADMIN");
 
   const [usuarios, setUsuarios] = useState<UsuarioResponseDTO[]>([]);
   const [filtroRol, setFiltroRol] = useState<Rol | "">("");
@@ -132,7 +125,7 @@ export default function UsuariosPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 font-mono text-xs text-ink-500">
-                    {new Date(u.creadoEn).toLocaleDateString("es-CO")}
+                    {formatFecha(u.creadoEn)}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <button

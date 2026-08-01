@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { getRol } from "@/lib/auth";
+import { usePageTitle } from "@/lib/usePageTitle";
 import { errorBanner } from "@/lib/ui";
 import { PageHeader } from "@/components/PageHeader";
 import { SkeletonStats } from "@/components/Skeleton";
@@ -16,6 +17,7 @@ interface Stats {
 }
 
 export default function DashboardPage() {
+  usePageTitle("Dashboard");
   const [stats, setStats] = useState<Stats | null>(null);
   const [adminStats, setAdminStats] = useState<DashboardAdminStatsDTO | null>(null);
   const [error, setError] = useState<string | null>(null);
