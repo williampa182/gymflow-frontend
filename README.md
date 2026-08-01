@@ -50,12 +50,12 @@ como referencia de proceso, no solo de código.
 - Registro y login con manejo de sesión vía cookie httpOnly
 - CRUD de planes y suscripciones (según rol)
 - Dashboard administrativo con métricas (gráficos con Recharts)
+- Chat de soporte integrado (`ChatWidget` flotante) que consume
+  `POST /api/chat` del backend (RAG simple sobre los planes + guía del
+  dashboard), con persistencia de la conversación en `sessionStorage`,
+  aviso de proveedor externo y kill-switch del lado del servidor
 - Landing page con las decisiones técnicas del proyecto explicadas para
   quien lo revisa
-- **Nota sobre el chatbot de soporte**: el backend ya expone
-  `POST /api/chat` (RAG simple sobre los planes, autenticado, con rate
-  limiting), pero todavía no hay UI en este repo que lo consuma — queda
-  como próximo paso.
 
 ## Empezar en local
 
