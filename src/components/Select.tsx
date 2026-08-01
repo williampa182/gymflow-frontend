@@ -29,7 +29,11 @@ export function Select({
   ariaLabel,
 }: SelectProps) {
   const [abierto, setAbierto] = useState(false);
+  const [focusIndex, setFocusIndex] = useState(0);
   const rootRef = useRef<HTMLDivElement>(null);
+  const botonRef = useRef<HTMLButtonElement>(null);
+  const opcionRefs = useRef<(HTMLLIElement | null)[]>([]);
+  const abiertoPrevRef = useRef(false);
   const seleccion = options.find((o) => o.value === value);
 
   useEffect(() => {
@@ -49,9 +53,66 @@ export function Select({
     };
   }, []);
 
+  // Al abrir: mueve el foco (roving) a la opción seleccionada o la primera.
+  // Al cerrar: devuelve el foco al botón que abre el desplegable.
+  useEffect(() => {
+    if (abierto) {
+      const idx = options.findIndex((o) => o.value === value);
+      const inicial = idx >= 0 ? idx : 0;
+      setFocusIndex(inicial);
+      opcionRefs.current[inicial]?.focus();
+    } else if (abiertoPrevRef.current) {
+      botonRef.current?.focus();
+    }
+    abiertoPrevRef.current = abierto;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [abierto]);
+
   function elegir(v: string) {
     onChange(v);
     setAbierto(false);
+  }
+
+  function onKeyDownLista(e: React.KeyboardEvent<HTMLUListElement>) {
+    if (options.length === 0) return;
+    switch (e.key) {
+      case "ArrowDown": {
+        e.preventDefault();
+        const next = Math.min(focusIndex + 1, options.length - 1);
+        setFocusIndex(next);
+        opcionRefs.current[next]?.focus();
+        break;
+      }
+      case "ArrowUp": {
+        e.preventDefault();
+        const next = Math.max(focusIndex - 1, 0);
+        setFocusIndex(next);
+        opcionRefs.current[next]?.focus();
+        break;
+      }
+      case "Home": {
+        e.preventDefault();
+        setFocusIndex(0);
+        opcionRefs.current[0]?.focus();
+        break;
+      }
+      case "End": {
+        e.preventDefault();
+        const last = options.length - 1;
+        setFocusIndex(last);
+        opcionRefs.current[last]?.focus();
+        break;
+      }
+      case "Enter":
+      case " ": {
+        e.preventDefault();
+        const opcion = options[focusIndex];
+        if (opcion) elegir(opcion.value);
+        break;
+      }
+      default:
+        break;
+    }
   }
 
   return (
@@ -73,6 +134,7 @@ export function Select({
 
       <button
         type="button"
+        ref={botonRef}
         onClick={() => setAbierto((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={abierto}
@@ -108,27 +170,28 @@ export function Select({
       {abierto && (
         <div className="absolute left-0 right-0 z-20 mt-1.5 overflow-hidden rounded-md border-2 border-ink-900 bg-concrete-50 shadow-[4px_4px_0_0_rgba(28,29,32,0.35)]">
           <div className="hazard-stripe h-1" />
-          <ul role="listbox" className="max-h-64 overflow-y-auto py-1">
+          <ul
+            role="listbox"
+            className="max-h-64 overflow-y-auto py-1"
+            onKeyDown={onKeyDownLista}
+          >
             {options.length === 0 && (
               <li className="px-3 py-2 font-mono text-xs text-ink-500">
                 Sin opciones
               </li>
             )}
-            {options.map((o) => {
+            {options.map((o, idx) => {
               const activo = o.value === value;
               return (
                 <li
                   key={o.value}
+                  ref={(el) => {
+                    opcionRefs.current[idx] = el;
+                  }}
                   role="option"
                   aria-selected={activo}
-                  tabIndex={0}
+                  tabIndex={idx === focusIndex ? 0 : -1}
                   onClick={() => elegir(o.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      elegir(o.value);
-                    }
-                  }}
                   className={`flex cursor-pointer items-center gap-2 px-3 py-2 text-sm transition focus:outline-none focus-visible:bg-concrete-100 ${
                     activo
                       ? "bg-hazard-400/10 text-ink-900"
