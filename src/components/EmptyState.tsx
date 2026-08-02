@@ -12,7 +12,7 @@ export function EmptyState({
     <div className="px-4 py-6 text-center">
       <p className="font-mono text-sm text-ink-500">{mensaje}</p>
       {variante === "sinResultados" && (
-        <p className="mt-1 text-xs text-ink-500">Probá ajustar el filtro.</p>
+        <p className="mt-1 text-xs text-ink-500">Prueba ajustar el filtro.</p>
       )}
     </div>
   );
