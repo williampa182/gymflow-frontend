@@ -149,6 +149,25 @@ body {
   opacity: 0.7;
 }
 
+.auth-button-danger {
+  background: var(--color-hazard-600);
+  color: var(--color-concrete-50);
+  box-shadow: 3px 3px 0 0 rgba(0, 0, 0, 0.35);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
+}
+.auth-button-danger:hover:not(:disabled) {
+  background: var(--color-hazard-500);
+  color: var(--color-ink-900);
+}
+.auth-button-danger:active:not(:disabled) {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 0.35);
+}
+.auth-button-danger:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 /* Remaches decorativos en las esquinas de la tarjeta de auth — detalle de
    identidad "sala de máquinas" sin depender de íconos externos. */
 .rivet {

@@ -6,12 +6,14 @@ export function AuthShell({
   linkTexto,
   linkHref,
   linkLabel,
+  linkVariant = "text",
   children,
 }: {
   titulo: string;
-  linkTexto: string;
+  linkTexto?: string;
   linkHref: string;
   linkLabel: string;
+  linkVariant?: "text" | "button";
   children: ReactNode;
 }) {
   return (
@@ -35,15 +37,26 @@ export function AuthShell({
           <div className="hazard-stripe h-1.5" />
           {children}
 
-          <p className="px-8 pb-8 text-center text-sm text-concrete-300">
-            {linkTexto}{" "}
-            <Link
-              href={linkHref}
-              className="font-semibold text-hazard-400 underline underline-offset-2 hover:text-hazard-500"
-            >
-              {linkLabel}
-            </Link>
-          </p>
+          {linkVariant === "button" ? (
+            <div className="px-8 pb-8">
+              <Link
+                href={linkHref}
+                className="auth-button-primary flex w-full items-center justify-center px-4 py-2.5 text-sm font-semibold uppercase tracking-wide"
+              >
+                {linkLabel}
+              </Link>
+            </div>
+          ) : (
+            <p className="px-8 pb-8 text-center text-sm text-concrete-300">
+              {linkTexto}{" "}
+              <Link
+                href={linkHref}
+                className="font-semibold text-hazard-400 underline underline-offset-2 hover:text-hazard-500"
+              >
+                {linkLabel}
+              </Link>
+            </p>
+          )}
         </div>
       </div>
     </div>

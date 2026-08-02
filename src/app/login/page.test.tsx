@@ -10,9 +10,9 @@ describe("LoginPage", () => {
   it("muestra el formulario con campos, botón y link a registro", () => {
     render(<LoginPage />);
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/contraseña/i)).toBeInTheDocument();
+    expect(screen.getByLabelText("Contraseña")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /ingresar/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /regístrate/i })).toHaveAttribute("href", "/register");
-    expect(screen.getByText("Panel de control")).toBeInTheDocument();
+    expect(screen.getByText("Iniciar sesión")).toBeInTheDocument();
   });
 });
