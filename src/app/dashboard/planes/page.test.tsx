@@ -18,16 +18,17 @@ vi.mock("@/lib/api", () => ({
   },
 }));
 
+vi.mock("@/lib/useRequireRole", () => ({
+  useRequireRole: vi.fn(() => true),
+}));
+
 vi.mock("@/lib/auth", () => ({
-  // La página de planes es visible para todos los roles autenticados, pero
-  // muestra botones de admin según hasRole. Para este test de regresión
-  // (contrato Page<T>) basta con no-admin; el flujo de render de la lista
-  // es idéntico.
-  hasRole: vi.fn(() => false),
+  getRol: vi.fn(),
 }));
 
 import api from "@/lib/api";
-import { hasRole } from "@/lib/auth";
+import { getRol } from "@/lib/auth";
+import { useRequireRole } from "@/lib/useRequireRole";
 import PlanesPage from "./page";
 
 // La página usa useToast(); el provider + host son requisito del árbol
@@ -100,6 +101,8 @@ const plansMock = [
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // La suite existente ejercita el flujo ADMIN: la vista de gestión completa.
+  vi.mocked(getRol).mockReturnValue("ADMIN");
   // Silenciamos console.error del componente durante los tests de "backend
   // falla", para no ensuciar la salida. Si el test rompe, vitest igual lo
   // muestra.
@@ -168,7 +171,6 @@ describe("dashboard/planes/page.tsx", () => {
 
   describe("acciones de admin", () => {
     it("deshabilita el toggle mientras corre el PATCH y evita el doble disparo", async () => {
-      vi.mocked(hasRole).mockReturnValue(true);
       vi.mocked(api.get).mockResolvedValue(pageResponse(plansMock));
       // PATCH que nunca resuelve: el botón queda en estado pendiente.
       vi.mocked(api.patch).mockReturnValue(new Promise(() => {}));
@@ -178,15 +180,13 @@ describe("dashboard/planes/page.tsx", () => {
       const botones = await screen.findAllByRole("button", { name: "Desactivar" });
       const boton = botones[0];
       fireEvent.click(boton);
-      fireEvent.click(boton);
+      fireEvent.click(screen.getByRole("button", { name: "¿Seguro?" }));
 
       expect(api.patch).toHaveBeenCalledTimes(1);
-      expect(boton).toBeDisabled();
-      expect(boton).toHaveTextContent("...");
+      expect(screen.getByRole("button", { name: "..." })).toBeDisabled();
     });
 
     it("avisa con un toast cuando se desactiva un plan", async () => {
-      vi.mocked(hasRole).mockReturnValue(true);
       vi.mocked(api.get).mockResolvedValue(pageResponse(plansMock));
       vi.mocked(api.patch).mockResolvedValue({ data: {} });
 
@@ -194,10 +194,50 @@ describe("dashboard/planes/page.tsx", () => {
 
       const botones = await screen.findAllByRole("button", { name: "Desactivar" });
       fireEvent.click(botones[0]);
+      fireEvent.click(screen.getByRole("button", { name: "¿Seguro?" }));
 
       await waitFor(() => {
         expect(screen.getByText("Plan desactivado.")).toBeInTheDocument();
       });
+    });
+
+    it("exige confirmación de dos pasos para desactivar", async () => {
+      vi.mocked(api.get).mockResolvedValue(pageResponse(plansMock));
+      vi.mocked(api.patch).mockResolvedValue({ data: {} });
+
+      renderPlanes();
+
+      const boton = await screen.findAllByRole("button", { name: "Desactivar" });
+      fireEvent.click(boton[0]);
+
+      expect(api.patch).not.toHaveBeenCalled();
+      expect(screen.getByRole("button", { name: "¿Seguro?" })).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole("button", { name: "¿Seguro?" }));
+
+      await waitFor(() => expect(api.patch).toHaveBeenCalledTimes(1));
+    });
+
+    it("muestra aria-invalid en los campos obligatorios del modal", async () => {
+      vi.mocked(api.get).mockResolvedValue(pageResponse(plansMock));
+
+      renderPlanes();
+      fireEvent.click(await screen.findByRole("button", { name: "+ Nuevo plan" }));
+      fireEvent.change(screen.getByLabelText("Duración (días)"), { target: { value: "" } });
+      fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+
+      expect(await screen.findByLabelText("Nombre")).toHaveAttribute("aria-invalid", "true");
+      expect(screen.getByLabelText("Precio")).toHaveAttribute("aria-invalid", "true");
+      expect(screen.getByLabelText("Duración (días)")).toHaveAttribute("aria-invalid", "true");
+    });
+
+    it("exige el guard para los tres roles permitidos sin redirigir al dashboard", () => {
+      vi.mocked(api.get).mockResolvedValue(pageResponse([]));
+      renderPlanes();
+      expect(useRequireRole).toHaveBeenCalledWith(
+        ["ADMIN", "CLIENTE", "ENTRENADOR"],
+        "/dashboard"
+      );
     });
   });
 });
