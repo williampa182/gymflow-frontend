@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { ToastProvider } from "@/lib/toast";
 import { ToastHost } from "@/components/ToastHost";
 
@@ -148,6 +149,69 @@ describe("dashboard/usuarios/page.tsx", () => {
       expect(
         screen.getByText("No se pudieron cargar los usuarios.")
       ).toBeInTheDocument();
+    });
+  });
+
+  it("cambia el rol con confirmacion de dos pasos y recarga la lista", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.get)
+      .mockResolvedValueOnce(pageResponse(USUARIOS_MOCK))
+      .mockResolvedValueOnce(
+        pageResponse([{ ...USUARIOS_MOCK[0], rol: "ENTRENADOR" as const }])
+      );
+    vi.mocked(api.patch).mockResolvedValueOnce({ data: {} });
+
+    renderUsuarios();
+
+    await waitFor(() => {
+      expect(screen.getByText("ana@example.com")).toBeInTheDocument();
+    });
+
+    const selector = screen.getByRole("combobox", {
+      name: `Rol de ${USUARIOS_MOCK[0].nombre}`,
+    });
+    await user.selectOptions(selector, "ENTRENADOR");
+    await user.click(screen.getByRole("button", { name: "Cambiar rol" }));
+
+    expect(api.patch).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Confirmar cambio" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Confirmar cambio" }));
+
+    await waitFor(() => {
+      expect(api.patch).toHaveBeenCalledWith("/usuarios/1/rol", {
+        rol: "ENTRENADOR",
+      });
+      expect(screen.getByRole("status")).toHaveTextContent("Rol actualizado");
+      expect(api.get).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it("muestra toast y error visible si falla el cambio de rol", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.get).mockResolvedValueOnce(pageResponse(USUARIOS_MOCK));
+    vi.mocked(api.patch).mockRejectedValueOnce(new Error("Network error"));
+
+    renderUsuarios();
+
+    await waitFor(() => {
+      expect(screen.getByText("ana@example.com")).toBeInTheDocument();
+    });
+
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: `Rol de ${USUARIOS_MOCK[0].nombre}` }),
+      "ENTRENADOR"
+    );
+    await user.click(screen.getByRole("button", { name: "Cambiar rol" }));
+    await user.click(screen.getByRole("button", { name: "Confirmar cambio" }));
+
+    await waitFor(() => {
+      expect(
+        screen.getAllByText("No se pudo cambiar el rol del usuario.")
+      ).toHaveLength(2);
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "No se pudo cambiar el rol del usuario."
+      );
     });
   });
 });
