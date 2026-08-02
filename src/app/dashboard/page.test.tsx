@@ -1,58 +1,41 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
+import { ToastHost } from "@/components/ToastHost";
+import { ToastProvider } from "@/lib/toast";
 
-// ─── Mocks ─────────────────────────────────────────────────────────
 vi.mock("@/lib/api", () => ({
   default: {
     get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    patch: vi.fn(),
-    delete: vi.fn(),
   },
 }));
 
-// getRol se mockea a nivel módulo; cada test lo ajusta con mockReturnValue.
 vi.mock("@/lib/auth", () => ({
   getRol: vi.fn(),
 }));
 
-// Mockeamos AdminDashboardCharts como stub para aislar el test de Recharts
-// (que require jsdom + SVG y agrega ruido). Nos importa el gate de rol, no
-// el render interno de los gráficos.
+vi.mock("@/lib/useRequireRole", () => ({
+  useRequireRole: vi.fn(() => true),
+}));
+
 vi.mock("./_components/AdminDashboardCharts", () => ({
   default: () => <div data-testid="charts-stub">[charts]</div>,
 }));
 
 import api from "@/lib/api";
 import { getRol } from "@/lib/auth";
+import { useRequireRole } from "@/lib/useRequireRole";
 import DashboardPage from "./page";
 
-// ─── Helpers: shape real del Page<T> de Spring Data ─────────────────
-// El dashboard SOLO lee `.totalElements` del Page — no usa `.content`. Pero
-// mockeamos el shape completo para documentar el contrato real.
 function pageTotal(totalElements: number) {
   return {
     data: {
       content: [],
-      pageable: { pageNumber: 0, pageSize: 20, sort: {}, offset: 0 },
       totalElements,
-      totalPages: 1,
-      last: true,
-      first: true,
-      size: 20,
-      number: 0,
-      sort: {},
-      numberOfElements: 0,
-      empty: totalElements === 0,
     },
   };
 }
 
-// Shape de GET /dashboard/admin/estadisticas. La tarjeta "Suscripciones
-// activas" se deriva de la suma de cantidadSuscripciones de
-// ingresosPorTipoPlan (el backend solo cuenta ACTIVA ahí).
-function adminStats(suscripcionesActivas: number) {
+function adminStats() {
   return {
     data: {
       usuariosPorRol: [
@@ -61,13 +44,13 @@ function adminStats(suscripcionesActivas: number) {
         { rol: "CLIENTE" as const, cantidad: 7 },
       ],
       ingresosPorTipoPlan: [
-        { tipoPlan: "MENSUAL" as const, ingresoEstimado: 100, cantidadSuscripciones: 3 },
-        { tipoPlan: "TRIMESTRAL" as const, ingresoEstimado: 200, cantidadSuscripciones: 2 },
-        { tipoPlan: "SEMESTRAL" as const, ingresoEstimado: 300, cantidadSuscripciones: 2 },
-        { tipoPlan: "ANUAL" as const, ingresoEstimado: 400, cantidadSuscripciones: 0 },
+        { tipoPlan: "MENSUAL" as const, ingresoEstimado: 100000, cantidadSuscripciones: 3 },
+        { tipoPlan: "TRIMESTRAL" as const, ingresoEstimado: 200000, cantidadSuscripciones: 2 },
+        { tipoPlan: "SEMESTRAL" as const, ingresoEstimado: 300000, cantidadSuscripciones: 2 },
+        { tipoPlan: "ANUAL" as const, ingresoEstimado: 0, cantidadSuscripciones: 0 },
       ],
       suscripcionesPorEstado: [
-        { estado: "ACTIVA" as const, cantidad: suscripcionesActivas },
+        { estado: "ACTIVA" as const, cantidad: 7 },
         { estado: "VENCIDA" as const, cantidad: 1 },
         { estado: "CANCELADA" as const, cantidad: 1 },
       ],
@@ -75,131 +58,158 @@ function adminStats(suscripcionesActivas: number) {
   };
 }
 
+function ownSubscriptionsPage(content: unknown[]) {
+  return {
+    data: {
+      content,
+      totalElements: content.length,
+    },
+  };
+}
+
+const subscription = {
+  id: 10,
+  usuarioId: 4,
+  nombreUsuario: "Cliente GymFlow",
+  planId: 1,
+  nombrePlan: "Plan Mensual",
+  fechaInicio: "2026-07-13",
+  fechaFin: "2026-08-12",
+  estado: "ACTIVA" as const,
+  creadoEn: "2026-07-13T10:00:00",
+};
+
+function renderDashboard() {
+  return render(
+    <ToastProvider>
+      <DashboardPage />
+      <ToastHost />
+    </ToastProvider>
+  );
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
-describe("dashboard/page.tsx — rol ADMIN", () => {
+describe("dashboard ADMIN", () => {
   beforeEach(() => {
     vi.mocked(getRol).mockReturnValue("ADMIN");
   });
 
-  it("renderiza los tres PlateStat: /planes y /usuarios con totalElements, suscripciones activas derivadas del endpoint único de stats", async () => {
-    // /planes?activo=true → totalElements 5
-    // /usuarios → totalElements 12
-    // /dashboard/admin/estadisticas → 3+2+2+0 = 7 suscripciones activas
+  it("muestra PageHeader dinámico y las cuatro estadísticas reales", async () => {
     vi.mocked(api.get)
       .mockResolvedValueOnce(pageTotal(5))
-      .mockResolvedValueOnce(pageTotal(12))
-      .mockResolvedValueOnce(adminStats(7));
+      .mockResolvedValueOnce(adminStats());
 
-    render(<DashboardPage />);
+    renderDashboard();
 
-    // Los 3 números deben aparecer en el DOM como texto del PlateStat.
+    expect(screen.getByTestId("dashboard-skeleton")).toBeInTheDocument();
+
     await waitFor(() => {
-      expect(screen.getByText("5")).toBeInTheDocument();
-    });
+      expect(screen.getByText("Dashboard")).toBeInTheDocument();
+      expect(screen.getByText("Usuarios activos")).toBeInTheDocument();
+    }, { timeout: 2500 });
+
     expect(screen.getByText("12")).toBeInTheDocument();
+    expect(screen.getByText("5")).toBeInTheDocument();
     expect(screen.getByText("7")).toBeInTheDocument();
-
-    // Los labels también
-    expect(screen.getByText("Planes activos")).toBeInTheDocument();
-    expect(screen.getByText("Usuarios registrados")).toBeInTheDocument();
-    expect(screen.getByText("Suscripciones activas")).toBeInTheDocument();
+    expect(screen.getByText("$ 600.000")).toBeInTheDocument();
   });
 
-  it("PREVENCIÓN DE REGRESIÓN: detecta si alguien rompe el contrato Page<T>", async () => {
-    // El 13/07 este dashboard se rompió en silencio: como la página usaba
-    // `.data.length` (que sobre un objeto Page devuelve undefined), los
-    // PlateStat quedaban vacíos SIN crashear — más peligroso que un error
-    // visible. Hoy la página usa `.totalElements`. Si alguien revierte eso,
-    // los números NO aparecerían en el DOM y este test fallaría en rojo.
+  it("muestra charts y accesos rápidos ADMIN", async () => {
     vi.mocked(api.get)
       .mockResolvedValueOnce(pageTotal(5))
-      .mockResolvedValueOnce(pageTotal(12))
-      .mockResolvedValueOnce(adminStats(7));
+      .mockResolvedValueOnce(adminStats());
 
-    render(<DashboardPage />);
+    renderDashboard();
 
-    await waitFor(() => {
-      // Si se rompe el contrato, esto falla porque el número no se renderiza.
-      expect(screen.getByText("5")).toBeInTheDocument();
-      expect(screen.getByText("12")).toBeInTheDocument();
-      expect(screen.getByText("7")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId("charts-stub")).toBeInTheDocument(), {
+      timeout: 2500,
     });
-  });
 
-  it("muestra AdminDashboardCharts solo para ADMIN y le pasa los stats", async () => {
-    vi.mocked(api.get)
-      .mockResolvedValueOnce(pageTotal(5))
-      .mockResolvedValueOnce(pageTotal(12))
-      .mockResolvedValueOnce(adminStats(7));
-
-    render(<DashboardPage />);
-
-    await waitFor(() => {
-      expect(screen.getByTestId("charts-stub")).toBeInTheDocument();
-    });
+    expect(screen.getByRole("link", { name: "Gestionar planes" })).toHaveAttribute(
+      "href",
+      "/dashboard/planes"
+    );
+    expect(screen.getByRole("link", { name: "Gestionar suscripciones" })).toHaveAttribute(
+      "href",
+      "/dashboard/suscripciones"
+    );
+    expect(screen.getByRole("link", { name: "Gestionar usuarios" })).toHaveAttribute(
+      "href",
+      "/dashboard/usuarios"
+    );
   });
 });
 
-describe("dashboard/page.tsx — rol CLIENTE (no-ADMIN)", () => {
-  beforeEach(() => {
+describe("dashboard CLIENTE y ENTRENADOR", () => {
+  it("CLIENTE ve su plan, vencimiento, estado vacío de asistencias y no solicita datos ADMIN", async () => {
     vi.mocked(getRol).mockReturnValue("CLIENTE");
-  });
+    vi.mocked(api.get).mockResolvedValueOnce(ownSubscriptionsPage([subscription]));
 
-  it("muestra 'N/A' en los PlateStat restringidos y NO llama a /usuarios ni /suscripciones", async () => {
-    // CLIENTE: solo se llama a /planes?activo=true. Los otros dos no.
-    vi.mocked(api.get).mockResolvedValueOnce(pageTotal(5));
-
-    render(<DashboardPage />);
-
-    // Planes activos: visible (CLIENTE sí lo ve)
-    await waitFor(() => {
-      expect(screen.getByText("5")).toBeInTheDocument();
-    });
-
-    // Los restringidos muestran "N/A" y "Solo visible para ADMIN"
-    expect(screen.getAllByText("N/A")).toHaveLength(2);
-    expect(
-      screen.getAllByText("Solo visible para ADMIN")
-    ).toHaveLength(2);
-
-    // Solo 1 llamada a api.get (la de /planes). No se llaman /usuarios ni
-    // /suscripciones — confirmación de que el gate es efectivo.
-    expect(api.get).toHaveBeenCalledTimes(1);
-  });
-
-  it("NO renderiza AdminDashboardCharts para CLIENTE", async () => {
-    vi.mocked(api.get).mockResolvedValueOnce(pageTotal(5));
-
-    render(<DashboardPage />);
+    renderDashboard();
 
     await waitFor(() => {
-      expect(screen.getByText("5")).toBeInTheDocument();
-    });
+      expect(screen.getByText("Panel del cliente")).toBeInTheDocument();
+      expect(screen.getByText("Plan Mensual")).toBeInTheDocument();
+      expect(screen.getByText("11/8/2026")).toBeInTheDocument();
+    }, { timeout: 2500 });
 
-    // El gate {getRol() === "ADMIN" && <AdminDashboardCharts />} debe
-    // excluir a CLIENTE.
-    expect(screen.queryByTestId("charts-stub")).not.toBeInTheDocument();
+    expect(screen.getByText("Asistencias esta semana")).toBeInTheDocument();
+    expect(screen.getByText("Todavía no hay registros de asistencia esta semana.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Ver mis suscripciones" })).toHaveAttribute(
+      "href",
+      "/dashboard/suscripciones"
+    );
+    expect(screen.queryByText("Ingresos estimados")).not.toBeInTheDocument();
+    expect(api.get).toHaveBeenCalledWith("/suscripciones/mis");
+    expect(api.get).not.toHaveBeenCalledWith("/dashboard/admin/estadisticas");
+  });
+
+  it("ENTRENADOR muestra un encabezado propio y EmptyState si no tiene plan", async () => {
+    vi.mocked(getRol).mockReturnValue("ENTRENADOR");
+    vi.mocked(api.get).mockResolvedValueOnce(ownSubscriptionsPage([]));
+
+    renderDashboard();
+
+    await waitFor(() => {
+      expect(screen.getByText("Panel del entrenador")).toBeInTheDocument();
+      expect(screen.getByText("No tienes un plan activo.")).toBeInTheDocument();
+    }, { timeout: 2500 });
   });
 });
 
-describe("dashboard/page.tsx — manejo de errores", () => {
-  beforeEach(() => {
-    vi.mocked(getRol).mockReturnValue("ADMIN");
+describe("dashboard: guard y errores", () => {
+  it("usa el guard para los tres roles permitidos", async () => {
+    vi.mocked(getRol).mockReturnValue("CLIENTE");
+    vi.mocked(api.get).mockResolvedValueOnce(ownSubscriptionsPage([]));
+
+    renderDashboard();
+
+    await waitFor(() => expect(screen.getByText("Panel del cliente")).toBeInTheDocument(), {
+      timeout: 2500,
+    });
+    expect(useRequireRole).toHaveBeenCalledWith(
+      ["ADMIN", "CLIENTE", "ENTRENADOR"],
+      "/login"
+    );
   });
 
-  it("muestra mensaje de error si el backend falla", async () => {
-    vi.mocked(api.get).mockRejectedValueOnce(new Error("Network error"));
+  it("muestra banner y toast si falla la carga", async () => {
+    vi.mocked(getRol).mockReturnValue("ADMIN");
+    vi.mocked(api.get)
+      .mockRejectedValueOnce(new Error("Network error"))
+      .mockResolvedValueOnce(adminStats());
 
-    render(<DashboardPage />);
+    renderDashboard();
 
     await waitFor(() => {
-      expect(
-        screen.getByText("No se pudieron cargar las estadísticas.")
-      ).toBeInTheDocument();
-    });
+      expect(screen.getByText("No se pudieron cargar las estadísticas.")).toBeInTheDocument();
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "No se pudieron cargar las estadísticas."
+      );
+    }, { timeout: 2500 });
   });
 });

@@ -1,163 +1,257 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { getRol } from "@/lib/auth";
 import { usePageTitle } from "@/lib/usePageTitle";
-import { errorBanner } from "@/lib/ui";
+import { useRequireRole } from "@/lib/useRequireRole";
+import { useToast } from "@/lib/toast";
+import { formatFecha, formatMoneda } from "@/lib/format";
+import { buttonSecondary, card, errorBanner } from "@/lib/ui";
+import { EmptyState } from "@/components/EmptyState";
 import { PageHeader } from "@/components/PageHeader";
+import { PlateStat } from "@/components/PlateStat";
 import { SkeletonStats } from "@/components/Skeleton";
+import type { DashboardAdminStatsDTO, Rol, SuscripcionResponseDTO } from "@/types";
 import AdminDashboardCharts from "./_components/AdminDashboardCharts";
-import type { DashboardAdminStatsDTO } from "@/types";
 
-interface Stats {
-  totalPlanesActivos: number;
-  totalUsuarios: number | null; // null = no autorizado a verlo (no-ADMIN)
-  totalSuscripcionesActivas: number | null;
+const ROLES_PERMITIDOS: Rol[] = ["ADMIN", "CLIENTE", "ENTRENADOR"];
+const MIN_BOOT_SKELETON_MS = 1500;
+
+interface PageResponse<T> {
+  content: T[];
+  totalElements?: number;
+}
+
+interface AdminDashboardData {
+  planesActivos: number;
+  estadisticas: DashboardAdminStatsDTO;
 }
 
 export default function DashboardPage() {
-  usePageTitle("Dashboard");
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [adminStats, setAdminStats] = useState<DashboardAdminStatsDTO | null>(null);
+  const rol = getRol() ?? "CLIENTE";
+  const esAdmin = rol === "ADMIN";
+  const autorizado = useRequireRole(ROLES_PERMITIDOS, "/login");
+  const { notificar } = useToast();
+  const titulo = esAdmin
+    ? "Dashboard"
+    : rol === "ENTRENADOR"
+      ? "Panel del entrenador"
+      : "Panel del cliente";
+  const subtitulo = esAdmin ? "Resumen general del gimnasio" : "Mi cuenta y mi suscripción";
+
+  usePageTitle(titulo);
+
+  const [adminData, setAdminData] = useState<AdminDashboardData | null>(null);
+  const [suscripciones, setSuscripciones] = useState<SuscripcionResponseDTO[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!autorizado) return;
+
     let cancelado = false;
+    const inicio = Date.now();
 
-    async function cargarEstadisticas() {
-      const rol = getRol();
-      const esAdmin = rol === "ADMIN";
-
+    async function cargarDashboard() {
       try {
-        // Los endpoints de listado devuelven Page<T> desde la paginación (3.3) —
-        // el array real está en .content, y totalElements ya viene calculado
-        // por Spring Data (más preciso que .content.length si hay más de una
-        // página). Las suscripciones activas, en cambio, se derivan del endpoint
-        // único de estadísticas: ingresosPorTipoPlan solo cuenta suscripciones
-        // ACTIVAS (DashboardAdminService.ingresosPorTipoPlan), así que la suma
-        // de cantidadSuscripciones es exactamente el total que antes pedía
-        // /suscripciones?estado=ACTIVA — y de paso el DTO se reutiliza para los
-        // charts, eliminando el fetch duplicado de AdminDashboardCharts.
-        const planesReq = api.get<{ totalElements: number }>("/planes", { params: { activo: true } });
+        if (esAdmin) {
+          const [planesRes, estadisticasRes] = await Promise.all([
+            api.get<PageResponse<unknown>>(`/planes`, { params: { activo: true } }),
+            api.get<DashboardAdminStatsDTO>("/dashboard/admin/estadisticas"),
+          ]);
 
-        const usuariosReq = esAdmin
-          ? api.get<{ totalElements: number }>("/usuarios")
-          : Promise.resolve(null);
-        const adminStatsReq = esAdmin
-          ? api.get<DashboardAdminStatsDTO>("/dashboard/admin/estadisticas")
-          : Promise.resolve(null);
+          if (cancelado) return;
+          setAdminData({
+            planesActivos: planesRes.data.totalElements ?? planesRes.data.content.length,
+            estadisticas: estadisticasRes.data,
+          });
+        } else {
+          const suscripcionesRes = await api.get<PageResponse<SuscripcionResponseDTO>>(
+            "/suscripciones/mis"
+          );
 
-        const [planesRes, usuariosRes, statsRes] = await Promise.all([
-          planesReq,
-          usuariosReq,
-          adminStatsReq,
-        ]);
-        if (cancelado) return;
-
-        setStats({
-          totalPlanesActivos: planesRes.data.totalElements,
-          totalUsuarios: usuariosRes ? usuariosRes.data.totalElements : null,
-          totalSuscripcionesActivas: statsRes
-            ? statsRes.data.ingresosPorTipoPlan.reduce(
-                (acc, e) => acc + e.cantidadSuscripciones,
-                0
-              )
-            : null,
-        });
-        if (statsRes) setAdminStats(statsRes.data);
+          if (cancelado) return;
+          setSuscripciones(suscripcionesRes.data.content);
+        }
       } catch (err) {
         if (!cancelado) {
-          setError("No se pudieron cargar las estadísticas.");
+          const mensaje = "No se pudieron cargar las estadísticas.";
+          setError(mensaje);
+          notificar("error", mensaje);
           console.error(err);
         }
       } finally {
-        if (!cancelado) setLoading(false);
+        const restante = Math.max(0, MIN_BOOT_SKELETON_MS - (Date.now() - inicio));
+        window.setTimeout(() => {
+          if (!cancelado) setLoading(false);
+        }, restante);
       }
     }
 
-    cargarEstadisticas();
+    cargarDashboard();
 
     return () => {
       cancelado = true;
     };
-  }, []);
+  }, [autorizado, esAdmin, notificar]);
 
-  if (loading) {
-    return <SkeletonStats />;
+  if (!autorizado || loading) {
+    return (
+      <div data-testid="dashboard-skeleton" aria-busy="true" aria-label="Cargando dashboard">
+        <SkeletonStats tarjetas={esAdmin ? 4 : 3} />
+      </div>
+    );
   }
+
+  const estadisticas = adminData?.estadisticas;
+  const usuariosActivos = estadisticas?.usuariosPorRol.reduce(
+    (total, item) => total + item.cantidad,
+    0
+  ) ?? 0;
+  const suscripcionesActivas = estadisticas?.ingresosPorTipoPlan.reduce(
+    (total, item) => total + item.cantidadSuscripciones,
+    0
+  ) ?? 0;
+  const ingresosEstimados = estadisticas?.ingresosPorTipoPlan.reduce(
+    (total, item) => total + Number(item.ingresoEstimado),
+    0
+  ) ?? 0;
 
   return (
     <div>
-      <PageHeader titulo="Dashboard" subtitulo="Resumen general del gimnasio" />
+      <PageHeader titulo={titulo} subtitulo={subtitulo} />
 
       {error && <p className={`mb-4 ${errorBanner}`}>{error}</p>}
 
-      {stats && (
-        <>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-            <PlateStat label="Planes activos" value={stats.totalPlanesActivos} variante="hazard" />
-            <PlateStat
-              label="Usuarios registrados"
-              value={stats.totalUsuarios}
-              restringido={stats.totalUsuarios === null}
-              variante="moss"
-            />
-            <PlateStat
-              label="Suscripciones activas"
-              value={stats.totalSuscripcionesActivas}
-              restringido={stats.totalSuscripcionesActivas === null}
-              variante="rust"
-            />
-          </div>
-
-          {getRol() === "ADMIN" && adminStats && (
-            <div className="mt-8">
-              <AdminDashboardCharts stats={adminStats} />
-            </div>
-          )}
-        </>
+      {esAdmin ? (
+        <AdminDashboard
+          data={adminData}
+          usuariosActivos={usuariosActivos}
+          suscripcionesActivas={suscripcionesActivas}
+          ingresosEstimados={ingresosEstimados}
+        />
+      ) : (
+        <UserDashboard suscripciones={suscripciones} />
       )}
     </div>
   );
 }
 
-const anilloVariantes = {
-  hazard: "border-hazard-400",
-  moss: "border-moss-600",
-  rust: "border-rust-600",
-};
-
-function PlateStat({
-  label,
-  value,
-  restringido,
-  variante,
+function AdminDashboard({
+  data,
+  usuariosActivos,
+  suscripcionesActivas,
+  ingresosEstimados,
 }: {
-  label: string;
-  value: number | null | undefined;
-  restringido?: boolean;
-  variante: "hazard" | "moss" | "rust";
+  data: AdminDashboardData | null;
+  usuariosActivos: number;
+  suscripcionesActivas: number;
+  ingresosEstimados: number;
 }) {
+  if (!data) {
+    return <EmptyState mensaje="Todavía no hay datos del gimnasio para mostrar." />;
+  }
+
   return (
-    <div className="flex items-center gap-4 rounded-lg border border-concrete-300 bg-concrete-50 p-5">
-      {/* Insignia tipo "corte transversal de disco de peso" */}
-      <div
-        className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-[3px] bg-ink-900 ${anilloVariantes[variante]}`}
-      >
-        {restringido ? (
-          <span className="font-mono text-[10px] text-concrete-300">N/A</span>
-        ) : (
-          <span className="font-display text-2xl font-bold text-concrete-50">{value}</span>
-        )}
+    <>
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <PlateStat label="Usuarios activos" value={usuariosActivos} variante="moss" />
+        <PlateStat label="Planes activos" value={data.planesActivos} variante="hazard" />
+        <PlateStat
+          label="Suscripciones activas"
+          value={suscripcionesActivas}
+          variante="rust"
+        />
+        <PlateStat
+          label="Ingresos estimados"
+          value={ingresosEstimados}
+          variante="hazard"
+          valueFormatter={formatMoneda}
+        />
       </div>
-      <div>
-        <p className="text-sm font-medium text-ink-900">{label}</p>
-        {restringido && (
-          <p className="mt-0.5 font-mono text-[11px] text-ink-500">Solo visible para ADMIN</p>
-        )}
+
+      <section className="mt-8" aria-labelledby="accesos-rapidos">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h2 id="accesos-rapidos" className="font-display text-xl font-bold text-ink-900">
+            Accesos rápidos
+          </h2>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/dashboard/planes" className={buttonSecondary}>
+            Gestionar planes
+          </Link>
+          <Link href="/dashboard/suscripciones" className={buttonSecondary}>
+            Gestionar suscripciones
+          </Link>
+          <Link href="/dashboard/usuarios" className={buttonSecondary}>
+            Gestionar usuarios
+          </Link>
+        </div>
+      </section>
+
+      <div className="mt-8">
+        <AdminDashboardCharts stats={data.estadisticas} />
       </div>
-    </div>
+    </>
+  );
+}
+
+function UserDashboard({ suscripciones }: { suscripciones: SuscripcionResponseDTO[] }) {
+  const suscripcionActiva = suscripciones.find((item) => item.estado === "ACTIVA");
+
+  return (
+    <>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <section className={card} aria-labelledby="mi-plan-actual">
+          <h2 id="mi-plan-actual" className="font-display text-lg font-bold text-ink-900">
+            Mi plan actual
+          </h2>
+          {suscripcionActiva ? (
+            <>
+              <p className="mt-3 font-display text-2xl font-bold text-ink-900">
+                {suscripcionActiva.nombrePlan}
+              </p>
+              <p className="mt-1 font-mono text-xs text-ink-500">
+                Desde {formatFecha(suscripcionActiva.fechaInicio)}
+              </p>
+            </>
+          ) : (
+            <EmptyState mensaje="No tienes un plan activo." />
+          )}
+        </section>
+
+        <section className={card} aria-labelledby="proximo-vencimiento">
+          <h2 id="proximo-vencimiento" className="font-display text-lg font-bold text-ink-900">
+            Próximo vencimiento
+          </h2>
+          {suscripcionActiva ? (
+            <p className="mt-3 font-display text-2xl font-bold text-ink-900">
+              {formatFecha(suscripcionActiva.fechaFin)}
+            </p>
+          ) : (
+            <EmptyState mensaje="No hay un vencimiento próximo." />
+          )}
+        </section>
+
+        <section className={card} aria-labelledby="asistencias-semana">
+          <h2 id="asistencias-semana" className="font-display text-lg font-bold text-ink-900">
+            Asistencias esta semana
+          </h2>
+          <EmptyState mensaje="Todavía no hay registros de asistencia esta semana." />
+        </section>
+      </div>
+
+      <section className={`${card} mt-8 flex flex-wrap items-center justify-between gap-4`}>
+        <div>
+          <h2 className="font-display text-lg font-bold text-ink-900">¿Quieres revisar tu historial?</h2>
+          <p className="mt-1 text-sm text-ink-500">Consulta tus suscripciones y fechas registradas.</p>
+        </div>
+        <Link href="/dashboard/suscripciones" className={buttonSecondary}>
+          Ver mis suscripciones
+        </Link>
+      </section>
+    </>
   );
 }

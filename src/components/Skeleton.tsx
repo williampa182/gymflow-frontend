@@ -46,19 +46,19 @@ export function SkeletonTarjetas({ tarjetas = 6 }: { tarjetas?: number }) {
   );
 }
 
-// Las 3 placas de estadísticas del dashboard — imita PlateStat.
-export function SkeletonStats() {
+// Placas de estadísticas del dashboard — imita PlateStat.
+export function SkeletonStats({ tarjetas = 4 }: { tarjetas?: number }) {
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-      {Array.from({ length: 3 }).map((_, i) => (
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      {Array.from({ length: tarjetas }).map((_, i) => (
         <div
           key={i}
-          className="flex items-center gap-4 rounded-lg border border-concrete-300 bg-concrete-50 p-5"
+          className="flex items-center gap-4 rounded-lg border-2 border-ink-700 bg-ink-900 p-5"
         >
           <Skeleton className="h-16 w-16 shrink-0 rounded-full" />
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
             <Skeleton className="mb-2 h-4 w-3/4" />
-            <Skeleton className="h-3 w-1/2" />
+            <Skeleton className="h-7 w-1/2" />
           </div>
         </div>
       ))}

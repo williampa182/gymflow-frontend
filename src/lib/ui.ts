@@ -9,18 +9,18 @@ export const card =
   "rounded-lg border border-concrete-300 border-t-4 border-t-hazard-400 bg-concrete-50 p-5";
 
 export const input =
-  "input-plate w-full rounded-md px-3 py-2 text-sm text-ink-900 outline-none";
+  "input-plate w-full rounded-md px-3 py-2 text-sm text-ink-900 outline-none focus-visible:outline-2 focus-visible:outline-offset-[-1px] focus-visible:outline-hazard-400";
 
 export const label = "mb-1 block text-sm font-medium text-ink-700";
 
 export const buttonPrimary =
-  "rounded-md bg-hazard-500 px-4 py-2 text-sm font-semibold text-ink-900 transition hover:bg-hazard-400 disabled:cursor-not-allowed disabled:opacity-50";
+  "rounded-md bg-hazard-500 px-4 py-2 text-sm font-semibold text-ink-900 transition hover:bg-hazard-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hazard-400 disabled:cursor-not-allowed disabled:opacity-50";
 
 export const buttonSecondary =
-  "rounded-md border border-concrete-300 bg-concrete-50 px-3 py-1.5 text-sm text-ink-700 transition hover:bg-concrete-100 disabled:cursor-not-allowed disabled:opacity-50";
+  "rounded-md border border-concrete-300 bg-concrete-50 px-3 py-1.5 text-sm text-ink-700 transition hover:bg-concrete-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hazard-400 disabled:cursor-not-allowed disabled:opacity-50";
 
 export const buttonDanger =
-  "rounded-md border border-rust-600/30 bg-rust-100 px-3 py-1 text-xs font-medium text-rust-700 transition hover:bg-rust-100/70 disabled:cursor-not-allowed disabled:opacity-50";
+  "auth-button-danger rounded-md px-3 py-1 text-xs font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hazard-400 disabled:cursor-not-allowed disabled:opacity-50";
 
 export const errorBanner =
   "rounded-md border border-rust-600/30 bg-rust-100 px-4 py-3 text-sm text-rust-700";

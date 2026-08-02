@@ -16,6 +16,11 @@ vi.mock("@/lib/api", () => ({
 
 vi.mock("@/lib/auth", () => ({
   hasRole: vi.fn(() => true),
+  getRol: vi.fn(),
+}));
+
+vi.mock("@/lib/useRequireRole", () => ({
+  useRequireRole: vi.fn(() => true),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -28,6 +33,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 import api from "@/lib/api";
+import { getRol } from "@/lib/auth";
 import SuscripcionesPage from "./page";
 
 // La página usa useToast(); el provider + host son requisito del árbol
@@ -92,8 +98,49 @@ const SUSCRIPCIONES_MOCK = [
   },
 ];
 
+const USUARIOS_MOCK = [
+  {
+    id: 10,
+    nombre: "Ana García",
+    email: "ana@example.com",
+    rol: "CLIENTE" as const,
+    activo: true,
+    creadoEn: "2026-06-01T10:00:00",
+  },
+];
+
+const PLANES_MOCK = [
+  {
+    id: 1,
+    nombre: "Plan Mensual Básico",
+    descripcion: "Acceso general",
+    precio: 25000,
+    duracionDias: 30,
+    tipo: "MENSUAL" as const,
+    limiteClases: 0,
+    incluyeClases: false,
+    incluyeEntrenadorPersonal: false,
+    activo: true,
+    creadoEn: "2026-06-01T10:00:00",
+  },
+  {
+    id: 2,
+    nombre: "Plan Inactivo",
+    descripcion: "No disponible",
+    precio: 10000,
+    duracionDias: 30,
+    tipo: "MENSUAL" as const,
+    limiteClases: 0,
+    incluyeClases: false,
+    incluyeEntrenadorPersonal: false,
+    activo: false,
+    creadoEn: "2026-06-02T10:00:00",
+  },
+];
+
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(getRol).mockReturnValue("ADMIN");
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
@@ -204,5 +251,65 @@ describe("dashboard/suscripciones/page.tsx", () => {
 
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
+
+    it("valida que exista un plan activo antes de crear", async () => {
+      vi.mocked(api.get).mockImplementation((url) => {
+        if (url === "/suscripciones") return Promise.resolve(pageResponse(SUSCRIPCIONES_MOCK));
+        if (url === "/usuarios") return Promise.resolve(pageResponse(USUARIOS_MOCK));
+        return Promise.resolve(pageResponse([]));
+      });
+
+      renderSuscripciones();
+      fireEvent.click(await screen.findByRole("button", { name: "+ Nueva suscripción" }));
+      fireEvent.click(await screen.findByRole("button", { name: "Crear" }));
+
+      expect(await screen.findByText("Selecciona un usuario y un plan activo.")).toBeInTheDocument();
+      expect(api.post).not.toHaveBeenCalled();
+    });
+
+    it("carga los usuarios y solo planes activos usando los Select del modal", async () => {
+      vi.mocked(api.get).mockImplementation((url) => {
+        if (url === "/suscripciones") return Promise.resolve(pageResponse(SUSCRIPCIONES_MOCK));
+        if (url === "/usuarios") return Promise.resolve(pageResponse(USUARIOS_MOCK));
+        return Promise.resolve(pageResponse(PLANES_MOCK));
+      });
+
+      renderSuscripciones();
+      fireEvent.click(await screen.findByRole("button", { name: "+ Nueva suscripción" }));
+
+      expect(await screen.findByRole("button", { name: "Usuario" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Plan" })).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole("button", { name: "Plan" }));
+      expect(screen.getAllByRole("option", { name: /Plan Mensual Básico/ })).toHaveLength(2);
+      expect(screen.queryByRole("option", { name: /Plan Inactivo/ })).not.toBeInTheDocument();
+    });
+
+    it("rechaza una fecha de fin anterior a la fecha de inicio", async () => {
+      const planConDuracionInvalida = { ...PLANES_MOCK[0], duracionDias: 0 };
+      vi.mocked(api.get).mockImplementation((url) => {
+        if (url === "/suscripciones") return Promise.resolve(pageResponse(SUSCRIPCIONES_MOCK));
+        if (url === "/usuarios") return Promise.resolve(pageResponse(USUARIOS_MOCK));
+        return Promise.resolve(pageResponse([planConDuracionInvalida]));
+      });
+
+      renderSuscripciones();
+      fireEvent.click(await screen.findByRole("button", { name: "+ Nueva suscripción" }));
+
+      fireEvent.click(await screen.findByRole("button", { name: "Usuario" }));
+      const usuarioOptions = screen.getAllByRole("option", { name: /Ana García/ });
+      fireEvent.click(usuarioOptions[usuarioOptions.length - 1]);
+
+      fireEvent.click(screen.getByRole("button", { name: "Plan" }));
+      const planOptions = screen.getAllByRole("option", { name: /Plan Mensual Básico/ });
+      fireEvent.click(planOptions[planOptions.length - 1]);
+      fireEvent.click(screen.getByRole("button", { name: "Crear" }));
+
+      expect(
+        await screen.findByText("La fecha de fin debe ser igual o posterior a la fecha de inicio.")
+      ).toBeInTheDocument();
+      expect(api.post).not.toHaveBeenCalled();
+    });
   });
+
 });
