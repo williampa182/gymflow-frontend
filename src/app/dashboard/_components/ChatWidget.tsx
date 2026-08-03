@@ -71,7 +71,7 @@ export default function ChatWidget() {
         onClick={() => setAbierto((v) => !v)}
         aria-label={abierto ? "Cerrar chat de soporte" : "Abrir chat de soporte"}
         aria-expanded={abierto}
-        className="fixed bottom-5 right-5 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-hazard-500 text-ink-900 shadow-[3px_3px_0_0_rgba(28,29,32,0.35)] transition hover:bg-hazard-400 md:bottom-6 md:right-6"
+        className="fixed bottom-5 right-5 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-hazard-500 text-ink-900 shadow-[3px_3px_0_0_rgba(0,0,0,0.5)] transition hover:bg-hazard-400 md:bottom-6 md:right-6"
       >
         {abierto ? <IconClose /> : <IconChat />}
       </button>
@@ -80,7 +80,7 @@ export default function ChatWidget() {
         <div
           role="dialog"
           aria-label="Chat de soporte GymFlow"
-          className="fixed bottom-20 right-4 left-4 z-20 flex max-h-[70vh] flex-col overflow-hidden rounded-lg border-2 border-concrete-300 bg-concrete-50 shadow-[6px_6px_0_0_rgba(28,29,32,0.25)] sm:left-auto sm:right-6 sm:w-96 md:bottom-24"
+          className="fixed bottom-20 right-4 left-4 z-20 flex max-h-[70vh] flex-col overflow-hidden rounded-lg border-2 border-ink-700 bg-ink-900 shadow-[6px_6px_0_0_rgba(0,0,0,0.5)] sm:left-auto sm:right-6 sm:w-96 md:bottom-24"
         >
           <div className="flex items-center justify-between border-b border-white/10 bg-ink-900 px-4 py-3">
             <div>
@@ -102,7 +102,7 @@ export default function ChatWidget() {
 
           <div ref={listRef} aria-live="polite" className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
             {mensajes.length === 0 && (
-              <p className="font-mono text-xs text-ink-500">
+              <p className="font-mono text-xs text-concrete-300">
                 Hola. Preguntame algo sobre los planes de GymFlow.
               </p>
             )}
@@ -111,28 +111,28 @@ export default function ChatWidget() {
                 key={m.id}
                 className={`max-w-[85%] rounded-md px-3 py-2 text-sm ${
                   m.rol === "usuario"
-                    ? "ml-auto bg-hazard-400/15 text-ink-900"
-                    : "bg-concrete-100 text-ink-700"
+                    ? "ml-auto bg-hazard-400/15 text-concrete-100"
+                    : "bg-ink-800 text-concrete-200"
                 }`}
               >
                 {m.rol === "asistente" ? renderizarMensaje(m.texto) : m.texto}
               </div>
             ))}
             {enviando && (
-              <div className="max-w-[85%] rounded-md bg-concrete-100 px-3 py-2 text-sm text-ink-500">
+              <div className="max-w-[85%] rounded-md bg-ink-800 px-3 py-2 text-sm text-concrete-300">
                 Escribiendo…
               </div>
             )}
           </div>
 
           {error && (
-            <p className="border-t border-rust-600/30 bg-rust-100 px-4 py-2 text-xs text-rust-700">
+            <p className="border-t border-rust-600/50 bg-rust-700/20 px-4 py-2 text-xs text-rust-100">
               {error}
             </p>
           )}
 
-          <div className="border-t border-concrete-300 bg-concrete-50 p-3">
-            <p className="mb-2 font-mono text-[10px] text-ink-500">
+          <div className="border-t border-ink-700 bg-ink-800 p-3">
+            <p className="mb-2 font-mono text-[10px] text-concrete-300">
               La conversación la procesa un proveedor externo (Gemini). No compartas datos personales.
             </p>
             <div className="flex items-end gap-2">
@@ -143,7 +143,7 @@ export default function ChatWidget() {
                 rows={1}
                 placeholder="Escribe tu pregunta..."
                 aria-label="Mensaje para soporte"
-                className="input-plate max-h-24 flex-1 resize-none rounded-md px-3 py-2 text-sm text-ink-900 outline-none"
+                className="auth-input max-h-24 flex-1 resize-none rounded-md px-3 py-2 text-sm outline-none"
               />
               <button
                 onClick={enviar}
@@ -247,12 +247,12 @@ function TablaMensaje({ filas }: { filas: string[] }) {
   const datos = filas.slice(1).map(partirFila);
 
   return (
-    <div className="overflow-x-auto rounded-md border border-concrete-300">
+<div className="overflow-x-auto rounded-md border border-ink-700">
       <table className="w-full border-collapse text-xs">
         <thead>
-          <tr className="bg-ink-900 text-concrete-50">
+          <tr className="bg-ink-900 text-concrete-100">
             {encabezado.map((celda, i) => (
-              <th key={i} className="border-b border-concrete-300 px-2 py-1.5 text-left font-display font-semibold">
+              <th key={i} className="border-b border-ink-700 px-2 py-1.5 text-left font-display font-semibold">
                 {renderizarNegritas(celda)}
               </th>
             ))}
@@ -260,9 +260,9 @@ function TablaMensaje({ filas }: { filas: string[] }) {
         </thead>
         <tbody>
           {datos.map((fila, i) => (
-            <tr key={i} className={i % 2 === 1 ? "bg-concrete-100/60" : undefined}>
+            <tr key={i} className={i % 2 === 1 ? "bg-ink-700/40" : undefined}>
               {fila.map((celda, j) => (
-                <td key={j} className="border-b border-concrete-300/60 px-2 py-1.5 align-top">
+                <td key={j} className="border-b border-ink-700/60 px-2 py-1.5 align-top">
                   {renderizarNegritas(celda)}
                 </td>
               ))}

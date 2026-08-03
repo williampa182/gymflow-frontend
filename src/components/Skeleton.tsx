@@ -5,7 +5,7 @@
 // para evitar saltos de layout al resolver el fetch.
 
 export function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`animate-pulse rounded-md bg-concrete-200 ${className}`} />;
+  return <div className={`animate-pulse rounded-md bg-ink-700 ${className}`} />;
 }
 
 // Fila de tabla (usuarios/suscripciones) — vive dentro de tableWrap.
@@ -32,7 +32,7 @@ export function SkeletonTarjetas({ tarjetas = 6 }: { tarjetas?: number }) {
       {Array.from({ length: tarjetas }).map((_, i) => (
         <div
           key={i}
-          className="rounded-lg border border-concrete-300 border-t-4 border-t-hazard-400 bg-concrete-50 p-5"
+          className="rounded-lg border border-ink-700 border-t-4 border-t-hazard-400 bg-ink-800 p-5"
         >
           <Skeleton className="mb-3 h-5 w-2/3" />
           <Skeleton className="mb-4 h-4 w-full" />

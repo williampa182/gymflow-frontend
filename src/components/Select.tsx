@@ -139,20 +139,20 @@ export function Select({
         aria-haspopup="listbox"
         aria-expanded={abierto}
         aria-label={ariaLabel}
-        className="group flex w-full items-stretch overflow-hidden rounded-md border border-concrete-300 bg-concrete-50 text-left text-sm text-ink-900 shadow-[3px_3px_0_0_rgba(28,29,32,0.15)] transition outline-none hover:border-ink-700 hover:shadow-[4px_4px_0_0_rgba(28,29,32,0.25)] focus-visible:outline-2 focus-visible:outline-offset-[-1px] focus-visible:outline-hazard-400"
+        className="group flex w-full items-stretch overflow-hidden rounded-md border border-ink-700 bg-ink-900 text-left text-sm text-concrete-50 shadow-[3px_3px_0_0_rgba(0,0,0,0.4)] transition outline-none hover:border-hazard-500 hover:shadow-[4px_4px_0_0_rgba(0,0,0,0.5)] focus-visible:outline-2 focus-visible:outline-offset-[-1px] focus-visible:outline-hazard-400"
       >
         <span
           className={`flex-1 truncate px-3 py-2 ${
-            seleccion ? "text-ink-900" : "text-ink-500"
+            seleccion ? "text-concrete-50" : "text-concrete-300"
           }`}
         >
           {seleccion ? seleccion.label : (placeholder ?? "Selecciona...")}
         </span>
         <span
-          className={`flex shrink-0 items-center border-l border-concrete-300 px-2.5 transition ${
+          className={`flex shrink-0 items-center border-l border-ink-700 px-2.5 transition ${
             abierto
               ? "bg-hazard-400 text-ink-900"
-              : "bg-concrete-100 text-ink-700 group-hover:bg-hazard-400 group-hover:text-ink-900"
+              : "bg-ink-800 text-concrete-300 group-hover:bg-hazard-400 group-hover:text-ink-900"
           }`}
         >
           <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
@@ -168,7 +168,7 @@ export function Select({
       </button>
 
       {abierto && (
-        <div className="absolute left-0 right-0 z-20 mt-1.5 overflow-hidden rounded-md border-2 border-ink-900 bg-concrete-50 shadow-[4px_4px_0_0_rgba(28,29,32,0.35)]">
+        <div className="absolute left-0 right-0 z-20 mt-1.5 overflow-hidden rounded-md border-2 border-ink-700 bg-ink-900 shadow-[4px_4px_0_0_rgba(0,0,0,0.5)]">
           <div className="hazard-stripe h-1" />
           <ul
             role="listbox"
@@ -176,7 +176,7 @@ export function Select({
             onKeyDown={onKeyDownLista}
           >
             {options.length === 0 && (
-              <li className="px-3 py-2 font-mono text-xs text-ink-500">
+              <li className="px-3 py-2 font-mono text-xs text-concrete-300">
                 Sin opciones
               </li>
             )}
@@ -192,10 +192,10 @@ export function Select({
                   aria-selected={activo}
                   tabIndex={idx === focusIndex ? 0 : -1}
                   onClick={() => elegir(o.value)}
-                  className={`flex cursor-pointer items-center gap-2 px-3 py-2 text-sm transition focus:outline-none focus-visible:bg-concrete-100 ${
+                  className={`flex cursor-pointer items-center gap-2 px-3 py-2 text-sm transition focus:outline-none focus-visible:bg-ink-800 ${
                     activo
-                      ? "bg-hazard-400/10 text-ink-900"
-                      : "text-ink-700 hover:bg-concrete-100"
+                      ? "bg-hazard-400/15 text-concrete-50"
+                      : "text-concrete-200 hover:bg-ink-800 hover:text-concrete-50"
                   }`}
                 >
                   <span

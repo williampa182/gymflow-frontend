@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import axios from "axios";
 import api from "@/lib/api";
 import { getRol } from "@/lib/auth";
-import type { PlanRequestDTO, PlanResponseDTO, Rol, TipoPlan } from "@/types";
+import type { PlanRequestDTO, PlanResponseDTO, Rol, SuscripcionResponseDTO, TipoPlan } from "@/types";
 import { Select } from "@/components/Select";
 import { EmptyState } from "@/components/EmptyState";
 import { PageHeader } from "@/components/PageHeader";
@@ -19,16 +19,16 @@ import {
   badgeEstado,
   buttonDanger,
   buttonPrimary,
-  buttonSecondary,
-  errorBanner,
-  input,
-  label as labelClass,
-  modalBody,
-  modalPanel,
-  tableHead,
+  buttonSecondaryDark,
+  errorBannerDark as errorBanner,
+  inputDark as input,
+  labelDark as labelClass,
+  modalBodyDark as modalBody,
+  modalPanelDark,
+  tableHeadDark as tableHead,
   tableHeadCell,
-  tableRowDivide,
-  tableWrap,
+  tableRowDivideDark as tableRowDivide,
+  tableWrapDark as tableWrap,
 } from "@/lib/ui";
 
 
@@ -230,7 +230,7 @@ export default function PlanesPage() {
 
 
   if (!autorizado) {
-    return <p className="font-mono text-sm text-ink-500">Verificando acceso...</p>;
+    return <p className="font-mono text-sm text-concrete-300">Verificando acceso...</p>;
   }
 
 
@@ -246,7 +246,7 @@ export default function PlanesPage() {
   }
 
   if (!esAdmin) {
-    return <PlanesDisponiblesView planes={planes} error={error} />;
+    return <PlanesDisponiblesView planes={planes} error={error} rol={rol} />;
   }
 
 
@@ -291,18 +291,18 @@ export default function PlanesPage() {
 
 
               return (
-                <tr key={plan.id} className="transition-colors hover:bg-concrete-100/70">
+<tr key={plan.id} className="transition-colors hover:bg-white/5">
                   <td className="px-4 py-3">
-                    <p className="font-medium text-ink-900">{plan.nombre}</p>
+                    <p className="font-medium text-concrete-100">{plan.nombre}</p>
                     {plan.descripcion && (
-                      <p className="mt-1 text-xs text-ink-500">{plan.descripcion}</p>
+                      <p className="mt-1 text-xs text-concrete-300">{plan.descripcion}</p>
                     )}
                   </td>
-                  <td className="px-4 py-3 font-mono text-xs text-ink-700">
+                  <td className="px-4 py-3 font-mono text-xs text-concrete-200">
                     {formatMoneda(plan.precio)}
                   </td>
                   <td className="px-4 py-3">
-                    <span className={badgeEstado("neutral")}>
+                    <span className={badgeEstado("neutral", "dark")}>
                       {plan.tipo} · {plan.duracionDias} días
                     </span>
                   </td>
@@ -313,7 +313,7 @@ export default function PlanesPage() {
                       aria-label={`Cambiar estado de ${plan.nombre}`}
                       disabled={pendiente}
                       onClick={() => void cambiarEstado(plan)}
-                      className={buttonSecondary}
+                      className={buttonSecondaryDark}
                     >
                       {pendiente ? "..." : plan.activo ? "Activo" : "Inactivo"}
                     </button>
@@ -323,7 +323,7 @@ export default function PlanesPage() {
                       <button
                         type="button"
                         onClick={() => abrirEditar(plan)}
-                        className={buttonSecondary}
+                        className={buttonSecondaryDark}
                       >
                         Editar
                       </button>
@@ -363,17 +363,17 @@ export default function PlanesPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="plan-modal-title"
-            className={modalPanel}
+            className={modalPanelDark}
           >
-            <span className="rivet-light left-3 top-3" />
-            <span className="rivet-light right-3 top-3" />
-            <span className="rivet-light bottom-3 left-3" />
-            <span className="rivet-light bottom-3 right-3" />
+            <span className="rivet left-3 top-3" />
+            <span className="rivet right-3 top-3" />
+            <span className="rivet bottom-3 left-3" />
+            <span className="rivet bottom-3 right-3" />
             <div className="hazard-stripe h-1" />
 
 
             <div className={modalBody}>
-              <h2 id="plan-modal-title" className="mb-4 font-display text-2xl font-bold text-ink-900">
+              <h2 id="plan-modal-title" className="mb-4 font-display text-2xl font-bold text-concrete-100">
                 {editandoId !== null ? "Editar plan" : "Nuevo plan"}
               </h2>
 
@@ -391,7 +391,7 @@ export default function PlanesPage() {
                     className={input}
                   />
                   {formErrors.nombre && (
-                    <p id="plan-nombre-error" className="mt-1 text-xs text-rust-700">
+                    <p id="plan-nombre-error" className="mt-1 text-xs text-rust-100">
                       {formErrors.nombre}
                     </p>
                   )}
@@ -426,7 +426,7 @@ export default function PlanesPage() {
                       className={input}
                     />
                     {formErrors.precio && (
-                      <p id="plan-precio-error" className="mt-1 text-xs text-rust-700">
+                      <p id="plan-precio-error" className="mt-1 text-xs text-rust-100">
                         {formErrors.precio}
                       </p>
                     )}
@@ -445,7 +445,7 @@ export default function PlanesPage() {
                       className={input}
                     />
                     {formErrors.duracionDias && (
-                      <p id="plan-duracion-error" className="mt-1 text-xs text-rust-700">
+                      <p id="plan-duracion-error" className="mt-1 text-xs text-rust-100">
                         {formErrors.duracionDias}
                       </p>
                     )}
@@ -473,7 +473,7 @@ export default function PlanesPage() {
                     onChange={(event) => setForm({ ...form, incluyeClases: event.target.checked })}
                     className="h-4 w-4 accent-hazard-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hazard-400"
                   />
-                  <label htmlFor="plan-clases" className="text-sm text-ink-700">Incluye clases</label>
+                  <label htmlFor="plan-clases" className="text-sm text-concrete-200">Incluye clases</label>
                 </div>
 
 
@@ -507,14 +507,14 @@ export default function PlanesPage() {
                     }
                     className="h-4 w-4 accent-hazard-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hazard-400"
                   />
-                  <label htmlFor="plan-entrenador" className="text-sm text-ink-700">
+                  <label htmlFor="plan-entrenador" className="text-sm text-concrete-200">
                     Incluye entrenador personal
                   </label>
                 </div>
 
 
                 <div className="flex gap-2 pt-2">
-                  <button type="button" onClick={cerrarForm} className={`flex-1 ${buttonSecondary}`}>
+                  <button type="button" onClick={cerrarForm} className={`flex-1 ${buttonSecondaryDark}`}>
                     Cancelar
                   </button>
                   <button type="submit" disabled={guardando} className={`flex-1 ${buttonPrimary}`}>
@@ -533,10 +533,69 @@ export default function PlanesPage() {
 function PlanesDisponiblesView({
   planes,
   error,
+  rol,
 }: {
   planes: PlanResponseDTO[];
   error: string | null;
+  rol: Rol;
 }) {
+  // Fase 3: solo CLIENTE puede autosuscibirse. ENTRENADOR ve el catálogo en
+  // solo lectura; el rol se re-valida en el backend (POST /suscripciones/mi
+  // exige autenticación y la identidad sale del JWT, jamás de un id del body).
+  const esCliente = rol === "CLIENTE";
+  const { notificar } = useToast();
+  const [inscribiendoPlan, setInscribiendoPlan] = useState<PlanResponseDTO | null>(null);
+  const [guardando, setGuardando] = useState(false);
+  const [yaInscripto, setYaInscripto] = useState(false);
+
+  function cerrarModal() {
+    if (!guardando) setInscribiendoPlan(null);
+  }
+  const modalRef = useFocusTrap(inscribiendoPlan !== null, cerrarModal);
+
+  // Precomputa si el CLIENTE ya es miembro: si lo es, el botón se reemplaza
+  // por un badge (evita el 409 como flujo normal). Fetch silencioso: si
+  // falla, se puede intentar inscribir igual — el backend valida y avisa.
+  useEffect(() => {
+    if (!esCliente) return;
+    let activo = true;
+    api
+      .get<PageResponse<SuscripcionResponseDTO>>("/suscripciones/mis")
+      .then((respuesta) => {
+        if (activo && respuesta.data.content.some((s) => s.estado === "ACTIVA")) {
+          setYaInscripto(true);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      activo = false;
+    };
+  }, [esCliente]);
+
+  async function inscribir() {
+    if (!inscribiendoPlan) return;
+    setGuardando(true);
+    try {
+      // Pago mock (demo de portafolio): no hay pasarela real; el POST
+      // simula la aprobación y el backend activa la membresía.
+      await api.post("/suscripciones/mi", { planId: inscribiendoPlan.id });
+      notificar("exito", `¡Listo! Ya sos miembro de ${inscribiendoPlan.nombre}.`);
+      setYaInscripto(true);
+      setInscribiendoPlan(null);
+    } catch (err) {
+      const mensaje = mensajeDeError(err, "No se pudo completar la inscripción.");
+      notificar("error", mensaje);
+      // 409 = ya tiene una suscripción activa: es informativo, el estado
+      // real es "miembro", así que el badge reemplaza al botón.
+      if (axios.isAxiosError(err) && err.response?.status === 409) {
+        setYaInscripto(true);
+      }
+      setInscribiendoPlan(null);
+    } finally {
+      setGuardando(false);
+    }
+  }
+
   // Defensa extra: el backend ya fuerza activo=true para no-ADMIN
   // (PlanService.listar()), pero si el contrato cambia, acá nunca se
   // filtra un plan inactivo hacia un CLIENTE/ENTRENADOR.
@@ -556,25 +615,42 @@ function PlanesDisponiblesView({
               <th className={tableHeadCell}>Nombre</th>
               <th className={tableHeadCell}>Precio</th>
               <th className={tableHeadCell}>Intervalo</th>
+              {esCliente && <th className={tableHeadCell}>Membresía</th>}
             </tr>
           </thead>
           <tbody className={tableRowDivide}>
             {planesActivos.map((plan) => (
-              <tr key={plan.id} className="transition-colors hover:bg-concrete-100/70">
+              <tr key={plan.id} className="transition-colors hover:bg-white/5">
                 <td className="px-4 py-3">
-                  <p className="font-medium text-ink-900">{plan.nombre}</p>
+                  <p className="font-medium text-concrete-100">{plan.nombre}</p>
                   {plan.descripcion && (
-                    <p className="mt-1 text-xs text-ink-500">{plan.descripcion}</p>
+                    <p className="mt-1 text-xs text-concrete-300">{plan.descripcion}</p>
                   )}
                 </td>
-                <td className="px-4 py-3 font-mono text-xs text-ink-700">
+                <td className="px-4 py-3 font-mono text-xs text-concrete-200">
                   {formatMoneda(plan.precio)}
                 </td>
                 <td className="px-4 py-3">
-                  <span className={badgeEstado("neutral")}>
+                  <span className={badgeEstado("neutral", "dark")}>
                     {plan.tipo} · {plan.duracionDias} días
                   </span>
                 </td>
+                {esCliente &&
+                  (yaInscripto ? (
+                    <td className="px-4 py-3">
+                      <span className={badgeEstado("moss", "dark")}>Ya sos miembro</span>
+                    </td>
+                  ) : (
+                    <td className="px-4 py-3">
+                      <button
+                        type="button"
+                        onClick={() => setInscribiendoPlan(plan)}
+                        className={buttonPrimary}
+                      >
+                        Inscribirme
+                      </button>
+                    </td>
+                  ))}
               </tr>
             ))}
           </tbody>
@@ -584,6 +660,79 @@ function PlanesDisponiblesView({
           <EmptyState mensaje="No hay planes activos disponibles." variante="sinDatos" />
         )}
       </div>
+
+      {inscribiendoPlan && (
+        <div className="fixed inset-0 z-10 flex items-center justify-center bg-ink-900/60 px-4">
+          <div
+            ref={modalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="inscribir-modal-title"
+            className={modalPanelDark}
+          >
+            <span className="rivet left-3 top-3" />
+            <span className="rivet right-3 top-3" />
+            <span className="rivet bottom-3 left-3" />
+            <span className="rivet bottom-3 right-3" />
+            <div className="hazard-stripe h-1" />
+
+            <div className={modalBody}>
+              <h2 id="inscribir-modal-title" className="mb-4 font-display text-2xl font-bold text-concrete-100">
+                Confirmar inscripción
+              </h2>
+
+              <dl className="space-y-2 text-sm text-concrete-200">
+                <div className="flex justify-between gap-4">
+                  <dt>Plan</dt>
+                  <dd className="font-medium text-concrete-100">{inscribiendoPlan.nombre}</dd>
+                </div>
+                {inscribiendoPlan.descripcion && (
+                  <div className="flex justify-between gap-4">
+                    <dt>Detalle</dt>
+                    <dd className="text-right text-concrete-300">{inscribiendoPlan.descripcion}</dd>
+                  </div>
+                )}
+                <div className="flex justify-between gap-4">
+                  <dt>Precio</dt>
+                  <dd className="font-mono text-concrete-100">{formatMoneda(inscribiendoPlan.precio)}</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt>Vigencia</dt>
+                  <dd className="text-concrete-100">
+                    {inscribiendoPlan.tipo} · {inscribiendoPlan.duracionDias} días desde hoy
+                  </dd>
+                </div>
+              </dl>
+
+              <p className="mt-4 rounded-md border border-ink-700 bg-ink-900/60 px-3 py-2 text-xs text-concrete-300">
+                Pago de demostración (demo de portafolio): no hay pasarela
+                real. El pago simula la aprobación y activa tu membresía.
+              </p>
+
+              <div className="flex gap-2 pt-4">
+                <button
+                  type="button"
+                  disabled={guardando}
+                  onClick={cerrarModal}
+                  className={`flex-1 ${buttonSecondaryDark}`}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  disabled={guardando}
+                  onClick={() => void inscribir()}
+                  className={`flex-1 ${buttonPrimary}`}
+                >
+                  {guardando
+                    ? "Procesando..."
+                    : `Pagar ${formatMoneda(inscribiendoPlan.precio)} (demo)`}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

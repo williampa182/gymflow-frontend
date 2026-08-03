@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { RegisterRequest } from "@/types";
 import { authErrorBanner } from "@/lib/ui";
@@ -32,11 +32,33 @@ export default function RegisterPage() {
     nombre: "",
     email: "",
     password: "",
+    rol: "CLIENTE",
   });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [primerRegistroSeraAdmin, setPrimerRegistroSeraAdmin] = useState(false);
   const passwordRef = useRef<HTMLInputElement>(null);
+
+  // Fase 2: si el sistema no tiene ningún ADMIN todavía, el primer registro
+  // nace administrador (bootstrap). Se muestra un aviso condicional en ese
+  // caso, en lugar de la nota general de auto-rol. Silencioso si falla.
+  useEffect(() => {
+    let cancelado = false;
+    fetch("/api/backend/auth/registro-estado")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { primerRegistroSeraAdmin?: boolean } | null) => {
+        if (!cancelado && data?.primerRegistroSeraAdmin) {
+          setPrimerRegistroSeraAdmin(true);
+        }
+      })
+      .catch(() => {
+        /* el aviso es informativo; si el backend no responde, no molesta */
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, []);
 
   const nivelFortaleza = escoreContrasena(form.password);
 
@@ -207,6 +229,43 @@ export default function RegisterPage() {
             {form.password ? NIVELES_FORTALEZA[nivelFortaleza] : "Mínimo 12 caracteres. Evita contraseñas comunes."}
           </p>
         </div>
+
+        <fieldset>
+          <legend className="mb-1 block text-sm font-semibold text-concrete-100">
+            Soy…
+          </legend>
+          <div className="flex flex-wrap gap-3">
+            <label className="flex cursor-pointer items-center gap-2 rounded-md border border-ink-700 bg-ink-900 px-3 py-2 text-sm text-concrete-100 transition has-[:checked]:border-hazard-400 has-[:checked]:text-hazard-400 disabled:cursor-not-allowed disabled:opacity-55">
+              <input
+                type="radio"
+                name="rol"
+                value="CLIENTE"
+                checked={form.rol === "CLIENTE"}
+                disabled={loading}
+                onChange={handleChange}
+                className="h-4 w-4 accent-hazard-400"
+              />
+              Soy cliente
+            </label>
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-ink-700 bg-ink-900 px-3 py-2 text-sm text-concrete-100 transition has-[:checked]:border-hazard-400 has-[:checked]:text-hazard-400 disabled:cursor-not-allowed disabled:opacity-55">
+              <input
+                type="radio"
+                name="rol"
+                value="ENTRENADOR"
+                checked={form.rol === "ENTRENADOR"}
+                disabled={loading}
+                onChange={handleChange}
+                className="h-4 w-4 accent-hazard-400"
+              />
+              Soy entrenador
+            </label>
+          </div>
+          <p className="mt-1.5 font-mono text-[11px] text-concrete-300">
+            {primerRegistroSeraAdmin
+              ? "Primer registro del sistema: nacerás como administrador (bootstrap)."
+              : "El rol de administrador lo asigna un administrador del gimnasio."}
+          </p>
+        </fieldset>
 
         {error && <p className={authErrorBanner}>{error}</p>}
 

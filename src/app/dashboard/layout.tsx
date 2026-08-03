@@ -47,7 +47,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (!checked) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-concrete-100">
+      <div className="flex min-h-screen items-center justify-center bg-ink-900">
         <div className="flex items-center gap-3">
           <Skeleton className="h-8 w-32" />
         </div>
@@ -57,9 +57,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <ToastProvider>
-      <div className="min-h-screen bg-concrete-100 md:flex">
+      <div className="min-h-screen bg-ink-900 md:flex">
       {/* Barra superior — solo visible en mobile */}
-      <div className="relative border-b border-concrete-300 bg-ink-900 px-4 py-3 md:hidden">
+      <div className="relative border-b border-ink-700 bg-ink-900 px-4 py-3 md:hidden">
         <div className="hazard-stripe absolute bottom-0 left-0 right-0 h-1" />
         <div className="flex items-center justify-between">
         <span className="font-display text-xl font-bold tracking-tight text-concrete-50">
@@ -135,6 +135,9 @@ function SidebarContent({ nombre, onNavigate }: { nombre: string | null; onNavig
       <nav className="flex flex-1 flex-col gap-1 px-3 py-4">
         <NavLink href="/dashboard" label="Dashboard" icon={<IconGrid />} onNavigate={onNavigate} />
         <NavLink href="/dashboard/planes" label="Planes" icon={<IconClipboard />} onNavigate={onNavigate} />
+        {(hasRole("ENTRENADOR") || hasRole("CLIENTE")) && (
+          <NavLink href="/dashboard/rutinas" label="Rutinas" icon={<IconDumbbell />} onNavigate={onNavigate} />
+        )}
         {hasRole("ADMIN") && (
           <NavLink href="/dashboard/usuarios" label="Usuarios" icon={<IconUsers />} onNavigate={onNavigate} />
         )}
@@ -229,6 +232,19 @@ function IconFolder() {
     <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
       <path d="M4 4h12v9l-3 3H4V4z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
       <path d="M8 8h4M8 11h4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconDumbbell() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+      <path
+        d="M2 8v4M4 6v8M16 6v8M18 8v4M6.5 8.5v3M13.5 8.5v3"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }

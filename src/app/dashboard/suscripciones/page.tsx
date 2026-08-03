@@ -26,16 +26,16 @@ import {
   badgeEstado,
   buttonDanger,
   buttonPrimary,
-  buttonSecondary,
-  errorBanner,
-  input,
-  label as labelClass,
-  modalBody,
-  modalPanel,
-  tableHead,
+  buttonSecondaryDark,
+  errorBannerDark,
+  inputDark as input,
+  labelDark as labelClass,
+  modalBodyDark as modalBody,
+  modalPanelDark as modalPanel,
+  tableHeadDark as tableHead,
   tableHeadCell,
-  tableRowDivide,
-  tableWrap,
+  tableRowDivideDark as tableRowDivide,
+  tableWrapDark as tableWrap,
 } from "@/lib/ui";
 
 
@@ -223,7 +223,7 @@ export default function SuscripcionesPage() {
 
 
   if (!autorizado) {
-    return <p className="font-mono text-sm text-ink-500">Verificando acceso...</p>;
+    return <p className="font-mono text-sm text-concrete-300">Verificando acceso...</p>;
   }
 
 
@@ -278,7 +278,7 @@ export default function SuscripcionesPage() {
       />
 
 
-      {error && <p className={`mb-4 ${errorBanner}`}>{error}</p>}
+      {error && <p className={`mb-4 ${errorBannerDark}`}>{error}</p>}
 
 
       <div className={tableWrap}>
@@ -305,17 +305,17 @@ export default function SuscripcionesPage() {
 
 
               return (
-                <tr key={suscripcion.id} className="transition-colors hover:bg-concrete-100/70">
-                  <td className="px-4 py-3 text-ink-900">{suscripcion.nombreUsuario}</td>
-                  <td className="px-4 py-3 text-ink-700">{suscripcion.nombrePlan}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-ink-500">
+                <tr key={suscripcion.id} className="transition-colors hover:bg-white/5">
+                  <td className="px-4 py-3 text-concrete-100">{suscripcion.nombreUsuario}</td>
+                  <td className="px-4 py-3 text-concrete-200">{suscripcion.nombrePlan}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-concrete-300">
                     {formatFecha(suscripcion.fechaInicio)}
                   </td>
-                  <td className="px-4 py-3 font-mono text-xs text-ink-500">
+                  <td className="px-4 py-3 font-mono text-xs text-concrete-300">
                     {formatFecha(suscripcion.fechaFin)}
                   </td>
                   <td className="px-4 py-3">
-                    <span className={badgeEstado(estadoVariante[suscripcion.estado])}>
+                    <span className={badgeEstado(estadoVariante[suscripcion.estado], "dark")}>
                       {suscripcion.estado}
                     </span>
                   </td>
@@ -357,15 +357,15 @@ export default function SuscripcionesPage() {
             aria-labelledby="suscripcion-modal-title"
             className={modalPanel}
           >
-            <span className="rivet-light left-3 top-3" />
-            <span className="rivet-light right-3 top-3" />
-            <span className="rivet-light bottom-3 left-3" />
-            <span className="rivet-light bottom-3 right-3" />
+            <span className="rivet left-3 top-3" />
+            <span className="rivet right-3 top-3" />
+            <span className="rivet bottom-3 left-3" />
+            <span className="rivet bottom-3 right-3" />
             <div className="hazard-stripe h-1" />
 
 
             <div className={modalBody}>
-              <h2 id="suscripcion-modal-title" className="mb-4 font-display text-2xl font-bold text-ink-900">
+              <h2 id="suscripcion-modal-title" className="mb-4 font-display text-2xl font-bold text-concrete-100">
                 Nueva suscripción
               </h2>
 
@@ -432,11 +432,11 @@ export default function SuscripcionesPage() {
                 </div>
 
 
-                {formError && <p className={errorBanner}>{formError}</p>}
+                {formError && <p className={errorBannerDark}>{formError}</p>}
 
 
                 <div className="flex gap-2 pt-2">
-                  <button type="button" onClick={cerrarForm} className={`flex-1 ${buttonSecondary}`}>
+                  <button type="button" onClick={cerrarForm} className={`flex-1 ${buttonSecondaryDark}`}>
                     Cancelar
                   </button>
                   <button type="submit" disabled={guardando || cargandoOpciones} className={`flex-1 ${buttonPrimary}`}>
@@ -468,7 +468,7 @@ function OwnSubscriptionsView({
   return (
     <div>
       <PageHeader titulo="Mis suscripciones" subtitulo="Tus planes y fechas registradas" />
-      {error && <p className={`mb-4 ${errorBanner}`}>{error}</p>}
+      {error && <p className={`mb-4 ${errorBannerDark}`}>{error}</p>}
       <div className={tableWrap}>
         <table className="w-full min-w-[560px] text-left text-sm">
           <thead className={tableHead}>
@@ -481,16 +481,16 @@ function OwnSubscriptionsView({
           </thead>
           <tbody className={tableRowDivide}>
             {suscripciones.map((suscripcion) => (
-              <tr key={suscripcion.id} className="transition-colors hover:bg-concrete-100/70">
-                <td className="px-4 py-3 text-ink-900">{suscripcion.nombrePlan}</td>
-                <td className="px-4 py-3 font-mono text-xs text-ink-500">
+              <tr key={suscripcion.id} className="transition-colors hover:bg-white/5">
+                <td className="px-4 py-3 text-concrete-100">{suscripcion.nombrePlan}</td>
+                <td className="px-4 py-3 font-mono text-xs text-concrete-300">
                   {formatFecha(suscripcion.fechaInicio)}
                 </td>
-                <td className="px-4 py-3 font-mono text-xs text-ink-500">
+                <td className="px-4 py-3 font-mono text-xs text-concrete-300">
                   {formatFecha(suscripcion.fechaFin)}
                 </td>
                 <td className="px-4 py-3">
-                  <span className={badgeEstado(estadoVariante[suscripcion.estado])}>
+                  <span className={badgeEstado(estadoVariante[suscripcion.estado], "dark")}>
                     {suscripcion.estado}
                   </span>
                 </td>

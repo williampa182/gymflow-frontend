@@ -8,7 +8,7 @@ import { usePageTitle } from "@/lib/usePageTitle";
 import { useRequireRole } from "@/lib/useRequireRole";
 import { useToast } from "@/lib/toast";
 import { formatFecha, formatMoneda } from "@/lib/format";
-import { buttonSecondary, card, errorBanner } from "@/lib/ui";
+import { buttonSecondaryDark, cardDark, errorBannerDark } from "@/lib/ui";
 import { EmptyState } from "@/components/EmptyState";
 import { PageHeader } from "@/components/PageHeader";
 import { PlateStat } from "@/components/PlateStat";
@@ -123,7 +123,7 @@ export default function DashboardPage() {
     <div>
       <PageHeader titulo={titulo} subtitulo={subtitulo} />
 
-      {error && <p className={`mb-4 ${errorBanner}`}>{error}</p>}
+      {error && <p className={`mb-4 ${errorBannerDark}`}>{error}</p>}
 
       {esAdmin ? (
         <AdminDashboard
@@ -157,35 +157,47 @@ function AdminDashboard({
   return (
     <>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <PlateStat label="Usuarios activos" value={usuariosActivos} variante="moss" />
-        <PlateStat label="Planes activos" value={data.planesActivos} variante="hazard" />
+        <PlateStat
+          label="Usuarios activos"
+          value={usuariosActivos}
+          variante="moss"
+          icono="usuarios"
+        />
+        <PlateStat
+          label="Planes activos"
+          value={data.planesActivos}
+          variante="hazard"
+          icono="planes"
+        />
         <PlateStat
           label="Suscripciones activas"
           value={suscripcionesActivas}
           variante="rust"
+          icono="suscripciones"
         />
         <PlateStat
           label="Ingresos estimados"
           value={ingresosEstimados}
           variante="hazard"
+          icono="ingresos"
           valueFormatter={formatMoneda}
         />
       </div>
 
       <section className="mt-8" aria-labelledby="accesos-rapidos">
         <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 id="accesos-rapidos" className="font-display text-xl font-bold text-ink-900">
+          <h2 id="accesos-rapidos" className="font-display text-xl font-bold text-concrete-100">
             Accesos rápidos
           </h2>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link href="/dashboard/planes" className={buttonSecondary}>
+          <Link href="/dashboard/planes" className={buttonSecondaryDark}>
             Gestionar planes
           </Link>
-          <Link href="/dashboard/suscripciones" className={buttonSecondary}>
+          <Link href="/dashboard/suscripciones" className={buttonSecondaryDark}>
             Gestionar suscripciones
           </Link>
-          <Link href="/dashboard/usuarios" className={buttonSecondary}>
+          <Link href="/dashboard/usuarios" className={buttonSecondaryDark}>
             Gestionar usuarios
           </Link>
         </div>
@@ -204,16 +216,16 @@ function UserDashboard({ suscripciones }: { suscripciones: SuscripcionResponseDT
   return (
     <>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <section className={card} aria-labelledby="mi-plan-actual">
-          <h2 id="mi-plan-actual" className="font-display text-lg font-bold text-ink-900">
+        <section className={cardDark} aria-labelledby="mi-plan-actual">
+          <h2 id="mi-plan-actual" className="font-display text-lg font-bold text-concrete-100">
             Mi plan actual
           </h2>
           {suscripcionActiva ? (
             <>
-              <p className="mt-3 font-display text-2xl font-bold text-ink-900">
+              <p className="mt-3 font-display text-2xl font-bold text-concrete-100">
                 {suscripcionActiva.nombrePlan}
               </p>
-              <p className="mt-1 font-mono text-xs text-ink-500">
+              <p className="mt-1 font-mono text-xs text-concrete-300">
                 Desde {formatFecha(suscripcionActiva.fechaInicio)}
               </p>
             </>
@@ -222,12 +234,12 @@ function UserDashboard({ suscripciones }: { suscripciones: SuscripcionResponseDT
           )}
         </section>
 
-        <section className={card} aria-labelledby="proximo-vencimiento">
-          <h2 id="proximo-vencimiento" className="font-display text-lg font-bold text-ink-900">
+        <section className={cardDark} aria-labelledby="proximo-vencimiento">
+          <h2 id="proximo-vencimiento" className="font-display text-lg font-bold text-concrete-100">
             Próximo vencimiento
           </h2>
           {suscripcionActiva ? (
-            <p className="mt-3 font-display text-2xl font-bold text-ink-900">
+            <p className="mt-3 font-display text-2xl font-bold text-concrete-100">
               {formatFecha(suscripcionActiva.fechaFin)}
             </p>
           ) : (
@@ -235,20 +247,20 @@ function UserDashboard({ suscripciones }: { suscripciones: SuscripcionResponseDT
           )}
         </section>
 
-        <section className={card} aria-labelledby="asistencias-semana">
-          <h2 id="asistencias-semana" className="font-display text-lg font-bold text-ink-900">
+        <section className={cardDark} aria-labelledby="asistencias-semana">
+          <h2 id="asistencias-semana" className="font-display text-lg font-bold text-concrete-100">
             Asistencias esta semana
           </h2>
           <EmptyState mensaje="Todavía no hay registros de asistencia esta semana." />
         </section>
       </div>
 
-      <section className={`${card} mt-8 flex flex-wrap items-center justify-between gap-4`}>
+      <section className={`${cardDark} mt-8 flex flex-wrap items-center justify-between gap-4`}>
         <div>
-          <h2 className="font-display text-lg font-bold text-ink-900">¿Quieres revisar tu historial?</h2>
-          <p className="mt-1 text-sm text-ink-500">Consulta tus suscripciones y fechas registradas.</p>
+          <h2 className="font-display text-lg font-bold text-concrete-100">¿Quieres revisar tu historial?</h2>
+          <p className="mt-1 text-sm text-concrete-300">Consulta tus suscripciones y fechas registradas.</p>
         </div>
-        <Link href="/dashboard/suscripciones" className={buttonSecondary}>
+        <Link href="/dashboard/suscripciones" className={buttonSecondaryDark}>
           Ver mis suscripciones
         </Link>
       </section>

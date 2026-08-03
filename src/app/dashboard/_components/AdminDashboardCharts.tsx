@@ -12,7 +12,7 @@ import {
   ResponsiveContainer,
   LabelList,
 } from "recharts";
-import { card } from "@/lib/ui";
+import { cardDark } from "@/lib/ui";
 import { formatMoneda } from "@/lib/format";
 import type {
   Rol,
@@ -31,14 +31,18 @@ const PALETA = {
   ink700: "#35363b",
   ink500: "#6b6c70",
   concrete300: "#c2bcae",
+  concrete100: "#ece9e3",
   concrete50: "#f7f6f3",
 } as const;
 
 // Asignación semántica consistente con badgeEstado() de ui.ts.
+// Decisión anti-slop (criterio The Crit): color con significado, sin neón,
+// paleta ≤ 3 tintes. CLIENTE es el neutro (gris acero), ENTRENADOR es moss,
+// ADMIN es hazard (el único saturado = warning/marca).
 const colorPorRol: Record<Rol, string> = {
   ADMIN: PALETA.hazard500,
   ENTRENADOR: PALETA.moss600,
-  CLIENTE: PALETA.ink700,
+  CLIENTE: PALETA.concrete300,
 };
 
 const colorPorEstado: Record<EstadoSuscripcion, string> = {
@@ -69,8 +73,8 @@ function ChartTooltip({
   const p = payload[0];
   const valor = p.value ?? 0;
   return (
-    <div className="rounded-md border border-concrete-300 bg-concrete-50 px-3 py-2 shadow-sm">
-      <p className="font-mono text-xs text-ink-900">
+    <div className="rounded-md border border-ink-700 bg-ink-900 px-3 py-2 shadow-[3px_3px_0_0_rgba(0,0,0,0.5)]">
+      <p className="font-mono text-xs text-concrete-100">
         {p.payload?.nombre ?? p.name}: {formatter ? formatter(valor) : valor}
       </p>
     </div>
@@ -117,17 +121,17 @@ export default function AdminDashboardCharts({
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       {/* ── Donut: usuarios por rol ── */}
       <section
-        className={`${card} flex flex-col`}
+        className={`${cardDark} flex flex-col`}
         role="img"
         aria-label={`Usuarios activos por rol: ${dataRol
           .map((d) => `${d.nombre} ${d.value}`)
           .join(", ")}`}
       >
         <header className="mb-4">
-          <h2 className="font-display text-lg font-bold text-ink-900">
+          <h2 className="font-display text-lg font-bold text-concrete-100">
             Usuarios activos por rol
           </h2>
-          <p className="font-mono text-[11px] text-ink-500">
+          <p className="font-mono text-[11px] text-concrete-300">
             Total: {totalUsuarios}
           </p>
         </header>
@@ -140,8 +144,8 @@ export default function AdminDashboardCharts({
                 nameKey="nombre"
                 innerRadius={55}
                 outerRadius={80}
-                paddingAngle={2}
-                stroke={PALETA.concrete50}
+                paddingAngle={0}
+                stroke={PALETA.ink900}
                 strokeWidth={2}
               >
                 {dataRol.map((d) => (
@@ -157,17 +161,17 @@ export default function AdminDashboardCharts({
 
       {/* ── Donut: suscripciones por estado ── */}
       <section
-        className={`${card} flex flex-col`}
+        className={`${cardDark} flex flex-col`}
         role="img"
         aria-label={`Suscripciones por estado: ${dataEstado
           .map((d) => `${d.nombre} ${d.value}`)
           .join(", ")}`}
       >
         <header className="mb-4">
-          <h2 className="font-display text-lg font-bold text-ink-900">
+          <h2 className="font-display text-lg font-bold text-concrete-100">
             Suscripciones por estado
           </h2>
-          <p className="font-mono text-[11px] text-ink-500">
+          <p className="font-mono text-[11px] text-concrete-300">
             Total: {totalSuscripciones}
           </p>
         </header>
@@ -180,8 +184,8 @@ export default function AdminDashboardCharts({
                 nameKey="nombre"
                 innerRadius={55}
                 outerRadius={80}
-                paddingAngle={2}
-                stroke={PALETA.concrete50}
+                paddingAngle={0}
+                stroke={PALETA.ink900}
                 strokeWidth={2}
               >
                 {dataEstado.map((d) => (
@@ -197,17 +201,17 @@ export default function AdminDashboardCharts({
 
       {/* ── Barras: ingresos por tipo de plan ── */}
       <section
-        className={`${card} lg:col-span-2 flex flex-col`}
+        className={`${cardDark} lg:col-span-2 flex flex-col`}
         role="img"
         aria-label={`Ingresos estimados por tipo de plan: ${dataIngresos
           .map((d) => `${d.nombre} ${formatMoneda(d.ingreso)}`)
           .join(", ")}`}
       >
         <header className="mb-4">
-          <h2 className="font-display text-lg font-bold text-ink-900">
+          <h2 className="font-display text-lg font-bold text-concrete-100">
             Ingresos estimados por tipo de plan
           </h2>
-          <p className="font-mono text-[11px] text-ink-500">
+          <p className="font-mono text-[11px] text-concrete-300">
             Suma de precios de suscripciones activas, por tipo de plan
           </p>
         </header>
@@ -220,16 +224,16 @@ export default function AdminDashboardCharts({
               <XAxis
                 dataKey="nombre"
                 tick={{
-                  fill: PALETA.ink500,
+                  fill: PALETA.concrete300,
                   fontSize: 12,
                   fontFamily: "JetBrains Mono, monospace",
                 }}
-                axisLine={{ stroke: PALETA.concrete300 }}
+                axisLine={{ stroke: PALETA.ink700 }}
                 tickLine={false}
               />
               <YAxis
                 tick={{
-                  fill: PALETA.ink500,
+                  fill: PALETA.concrete300,
                   fontSize: 11,
                   fontFamily: "JetBrains Mono, monospace",
                 }}
@@ -241,7 +245,7 @@ export default function AdminDashboardCharts({
                 width={70}
               />
               <Tooltip
-                cursor={{ fill: PALETA.concrete300, opacity: 0.25 }}
+                cursor={{ fill: PALETA.ink700, opacity: 0.25 }}
                 content={<ChartTooltip formatter={formatMoneda} />}
               />
               <Bar dataKey="ingreso" radius={[4, 4, 0, 0]} maxBarSize={90}>
@@ -253,7 +257,7 @@ export default function AdminDashboardCharts({
                   position="top"
                   formatter={(v) => formatMoneda(Number(v))}
                   style={{
-                    fill: PALETA.ink900,
+                    fill: PALETA.concrete100,
                     fontSize: 11,
                     fontFamily: "JetBrains Mono, monospace",
                   }}
@@ -286,7 +290,7 @@ function LeyendaCategorias({
               className="inline-block h-2.5 w-2.5 rounded-full"
               style={{ backgroundColor: d.color }}
             />
-            <span className="font-mono text-xs text-ink-700">
+            <span className="font-mono text-xs text-concrete-200">
               {d.nombre} · {d.value} ({pct}%)
             </span>
           </li>

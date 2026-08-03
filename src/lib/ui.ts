@@ -30,16 +30,53 @@ export const errorBanner =
 export const authErrorBanner =
   "rounded-md border border-rust-600/50 bg-rust-700/20 px-4 py-3 text-sm font-medium text-rust-100";
 
-// Badges de estado — moss (activo/positivo), rust (peligro/cancelado),
-// hazard (advertencia/vencido), concrete (neutral)
-export function badgeEstado(variante: "moss" | "rust" | "hazard" | "neutral") {
+// ─── Variantes dark "sala de máquinas" (dashboard) ─────────────────
+// El dashboard usa fondo ink con paneles ink-800 y texto concrete. Estas
+// variantes conviven con las claras (la landing pública sigue clara);
+// cada página del dashboard importa la variante que necesita.
+export const cardDark =
+  "rounded-lg border border-ink-700 border-t-4 border-t-hazard-400 bg-ink-800 p-5 text-concrete-100";
+
+export const inputDark =
+  "auth-input w-full rounded-md px-3 py-2 text-sm text-concrete-50 outline-none focus-visible:outline-2 focus-visible:outline-offset-[-1px] focus-visible:outline-hazard-400";
+
+export const labelDark = "mb-1 block text-sm font-medium text-concrete-300";
+
+export const buttonSecondaryDark =
+  "rounded-md border border-ink-700 bg-ink-800 px-3 py-1.5 text-sm text-concrete-100 transition hover:bg-ink-700 hover:text-concrete-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hazard-400 disabled:cursor-not-allowed disabled:opacity-50";
+
+export const errorBannerDark = authErrorBanner;
+
+export const modalPanelDark =
+  "relative w-full max-w-md overflow-hidden rounded-none border-2 border-ink-700 bg-ink-800 shadow-[6px_6px_0_0_rgba(0,0,0,0.5)]";
+export const modalBodyDark = "p-6";
+export const tableWrapDark =
+  "overflow-x-auto rounded-lg border border-ink-700 border-t-4 border-t-hazard-400 bg-ink-800";
+export const tableHeadDark = "border-b border-ink-700 bg-ink-900/60 text-concrete-300";
+export const tableRowDivideDark = "divide-y divide-white/10";
+export const tableCellMutedDark = "px-4 py-3 font-mono text-xs text-concrete-300";
+
+// Badges de estado — soportan un segundo argumento "dark" para el dashboard
+// (badge estampado sobre ink); el default "light" preserva la landing.
+export function badgeEstado(
+  variante: "moss" | "rust" | "hazard" | "neutral",
+  modo: "light" | "dark" = "light"
+) {
   const base = "inline-flex rounded-full px-2 py-0.5 text-xs font-medium";
-  const variantes = {
-    moss: "bg-moss-100 text-moss-700",
-    rust: "bg-rust-100 text-rust-700",
-    hazard: "bg-hazard-400/20 text-hazard-600",
-    neutral: "bg-concrete-200 text-ink-500",
-  };
+  const variantes =
+    modo === "dark"
+      ? {
+          moss: "bg-moss-600/25 text-moss-100",
+          rust: "bg-rust-600/25 text-rust-100",
+          hazard: "bg-hazard-400/15 text-hazard-400",
+          neutral: "bg-ink-700 text-concrete-300",
+        }
+      : {
+          moss: "bg-moss-100 text-moss-700",
+          rust: "bg-rust-100 text-rust-700",
+          hazard: "bg-hazard-400/20 text-hazard-600",
+          neutral: "bg-concrete-200 text-ink-500",
+        };
   return `${base} ${variantes[variante]}`;
 }
 

@@ -65,6 +65,10 @@ export interface RegisterRequest {
   nombre: string;
   email: string;
   password: string;
+  // Fase 2: el usuario puede pedir nacer CLIENTE o ENTRENADOR. El backend
+  // degrada cualquier otro valor (incluido ADMIN) a CLIENTE — nunca se
+  // auto-escala. Ausente = CLIENTE.
+  rol?: "CLIENTE" | "ENTRENADOR";
 }
 
 export interface AuthResponse {
@@ -110,4 +114,53 @@ export interface ChatRequestDTO {
 
 export interface ChatResponseDTO {
   respuesta: string;
+}
+
+// ─── Fase 4: rutinas y acompañamiento ─────────────────────────────
+// Coinciden con los DTOs del backend (RutinaResponseDTO, EjercicioResponseDTO,
+// ClienteElegibleDTO, MiEntrenadorDTO).
+
+export interface EjercicioRequestDTO {
+  // id presente = actualizar ejercicio existente en el PUT
+  id?: number | null;
+  nombre: string;
+  series: number;
+  repeticiones: number;
+}
+
+export interface RutinaRequestDTO {
+  nombre: string;
+  descripcion?: string;
+  ejercicios: EjercicioRequestDTO[];
+}
+
+export interface EjercicioResponseDTO {
+  id: number;
+  nombre: string;
+  series: number;
+  repeticiones: number;
+  orden: number;
+}
+
+export interface RutinaResponseDTO {
+  id: number;
+  nombre: string;
+  descripcion: string;
+  activo: boolean;
+  creadoEn: string;
+  ejercicios: EjercicioResponseDTO[];
+}
+
+export interface ClienteElegibleDTO {
+  id: number;
+  nombre: string;
+  yaAcompaño: boolean;
+  // id de la asignación activa del entrenador autenticado (null si no lo acompaña)
+  asignacionId: number | null;
+}
+
+export interface MiEntrenadorDTO {
+  id: number;
+  nombre: string;
+  asignadoEn: string;
 }

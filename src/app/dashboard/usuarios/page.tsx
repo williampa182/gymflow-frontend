@@ -12,14 +12,14 @@ import { PageHeader } from "@/components/PageHeader";
 import { EmptyState } from "@/components/EmptyState";
 import { SkeletonFilas } from "@/components/Skeleton";
 import {
-  errorBanner,
-  buttonSecondary,
+  errorBannerDark,
+  buttonSecondaryDark,
   buttonDanger,
   badgeEstado,
-  tableWrap,
-  tableHead,
+  tableWrapDark as tableWrap,
+  tableHeadDark as tableHead,
   tableHeadCell,
-  tableRowDivide,
+  tableRowDivideDark as tableRowDivide,
 } from "@/lib/ui";
 
 const ROLES: Rol[] = ["ADMIN", "ENTRENADOR", "CLIENTE"];
@@ -149,7 +149,7 @@ export default function UsuariosPage() {
   }
 
   if (!autorizado) {
-    return <p className="font-mono text-sm text-ink-500">Verificando acceso...</p>;
+    return <p className="font-mono text-sm text-concrete-300">Verificando acceso...</p>;
   }
 
   return (
@@ -168,7 +168,7 @@ export default function UsuariosPage() {
         }
       />
 
-      {error && <p className={`mb-4 ${errorBanner}`}>{error}</p>}
+      {error && <p className={`mb-4 ${errorBannerDark}`}>{error}</p>}
 
       {loading ? (
         <div className={tableWrap}>
@@ -189,9 +189,9 @@ export default function UsuariosPage() {
             </thead>
             <tbody className={tableRowDivide}>
               {usuarios.map((u) => (
-                <tr key={u.id} className="transition-colors hover:bg-concrete-100/70">
-                  <td className="px-4 py-3 text-ink-900">{u.nombre}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-ink-500">{u.email}</td>
+                <tr key={u.id} className="transition-colors hover:bg-white/5">
+                  <td className="px-4 py-3 text-concrete-100">{u.nombre}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-concrete-300">{u.email}</td>
                   <td className="px-4 py-3">
                     <Select
                       value={rolPendiente?.id === u.id ? rolPendiente.rol : u.rol}
@@ -202,11 +202,11 @@ export default function UsuariosPage() {
                     />
                   </td>
                   <td className="px-4 py-3">
-                    <span className={badgeEstado(u.activo ? "moss" : "neutral")}>
+                    <span className={badgeEstado(u.activo ? "moss" : "neutral", "dark")}>
                       {u.activo ? "Activo" : "Inactivo"}
                     </span>
                   </td>
-                  <td className="px-4 py-3 font-mono text-xs text-ink-500">
+                  <td className="px-4 py-3 font-mono text-xs text-concrete-300">
                     {formatFecha(u.creadoEn)}
                   </td>
                   <td className="px-4 py-3 text-right">
@@ -253,7 +253,7 @@ export default function UsuariosPage() {
                         <button
                           onClick={() => cambiarEstado(u)}
                           disabled={cambiandoId === u.id}
-                          className={buttonSecondary}
+className={buttonSecondaryDark}
                         >
                           {cambiandoId === u.id ? "..." : "Activar"}
                         </button>
