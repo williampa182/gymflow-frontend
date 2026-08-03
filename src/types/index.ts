@@ -149,6 +149,14 @@ export interface RutinaResponseDTO {
   activo: boolean;
   creadoEn: string;
   ejercicios: EjercicioResponseDTO[];
+  // clientes que tienen asignada esta rutina (solo en la vista ENTRENADOR;
+  // para el CLIENTE siempre llega vacía — no filtra qué otros clientes la tienen)
+  asignados: ClienteAsignadoDTO[];
+}
+
+export interface ClienteAsignadoDTO {
+  id: number;
+  nombre: string;
 }
 
 export interface ClienteElegibleDTO {
@@ -162,5 +170,12 @@ export interface ClienteElegibleDTO {
 export interface MiEntrenadorDTO {
   id: number;
   nombre: string;
+  asignadoEn: string;
+}
+
+export interface HistorialAcompanamientoDTO {
+  id: number;
+  entrenadorNombre: string;
+  activa: boolean;
   asignadoEn: string;
 }

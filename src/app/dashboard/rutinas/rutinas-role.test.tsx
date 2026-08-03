@@ -1,5 +1,5 @@
 ﻿import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent, within } from "@testing-library/react";
 import { ToastHost } from "@/components/ToastHost";
 import { ToastProvider } from "@/lib/toast";
 
@@ -40,6 +40,7 @@ const rutinaMock = {
     { id: 1, nombre: "Press banca", series: 3, repeticiones: 10, orden: 1 },
     { id: 2, nombre: "Sentadilla", series: 4, repeticiones: 8, orden: 2 },
   ],
+  asignados: [],
 };
 
 function renderPage() {
@@ -183,6 +184,68 @@ describe("fase 4: vista del ENTRENADOR", () => {
     });
     vi.restoreAllMocks();
   });
+
+  it("quita una rutina desde la card (asignada a un cliente sin acompañamiento vigente)", async () => {
+    // Beto ya no está acompañado pero conserva la asignación de rutina:
+    // la única vía para quitársela es el chip de la card.
+    const rutinaDeBeto = {
+      ...rutinaMock,
+      asignados: [{ id: 2, nombre: "Cliente Beto" }],
+    };
+    vi.mocked(api.get).mockResolvedValueOnce({ data: [rutinaDeBeto] });
+    vi.mocked(api.get).mockResolvedValueOnce({ data: clientesMock });
+    vi.mocked(api.get).mockResolvedValue({ data: [] });
+    vi.mocked(api.delete).mockResolvedValue({});
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText("Full Body")).toBeInTheDocument();
+    });
+    expect(screen.getByText("Asignada a:")).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Quitar Full Body a Cliente Beto" })
+    );
+
+    await waitFor(() => {
+      expect(api.delete).toHaveBeenCalledWith("/rutinas/10/asignar/2");
+    });
+    expect(await screen.findByText("Rutina quitada")).toBeInTheDocument();
+    // recarga para reflejar el estado nuevo
+    expect(api.get).toHaveBeenCalledWith("/rutinas");
+    expect(api.get).toHaveBeenCalledWith("/entrenador/clientes-elegibles");
+  });
+
+  it("quita una rutina desde la sub-fila de un cliente acompañado", async () => {
+    const rutinaDeCarla = {
+      ...rutinaMock,
+      asignados: [{ id: 3, nombre: "Cliente Carla" }],
+    };
+    vi.mocked(api.get).mockResolvedValueOnce({ data: [rutinaDeCarla] });
+    vi.mocked(api.get).mockResolvedValueOnce({ data: clientesMock });
+    vi.mocked(api.get).mockResolvedValue({ data: [] });
+    vi.mocked(api.delete).mockResolvedValue({});
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText("Rutinas asignadas:")).toBeInTheDocument();
+    });
+
+    const filaCliente = screen
+      .getByText("Rutinas asignadas:")
+      .closest("tr");
+    fireEvent.click(
+      within(filaCliente!).getByRole("button", {
+        name: "Quitar Full Body a Cliente Carla",
+      })
+    );
+
+    await waitFor(() => {
+      expect(api.delete).toHaveBeenCalledWith("/rutinas/10/asignar/3");
+    });
+  });
 });
 
 describe("fase 4: vista del CLIENTE", () => {
@@ -195,6 +258,7 @@ describe("fase 4: vista del CLIENTE", () => {
     vi.mocked(api.get).mockResolvedValueOnce({
       data: { id: 1, nombre: "Coach Ana", asignadoEn: "2026-08-02T10:00:00" },
     });
+    vi.mocked(api.get).mockResolvedValueOnce({ data: [] });
 
     renderPage();
 
@@ -206,6 +270,7 @@ describe("fase 4: vista del CLIENTE", () => {
     expect(screen.queryByRole("button", { name: "+ Nueva rutina" })).not.toBeInTheDocument();
     expect(api.get).toHaveBeenCalledWith("/rutinas/mias");
     expect(api.get).toHaveBeenCalledWith("/entrenador/mio");
+    expect(api.get).toHaveBeenCalledWith("/entrenador/mi-historial");
   });
 
   it("sin acompañante ni rutinas muestra los estados vacíos", async () => {
@@ -214,6 +279,7 @@ describe("fase 4: vista del CLIENTE", () => {
       isAxiosError: true,
       response: { status: 404 },
     });
+    vi.mocked(api.get).mockResolvedValueOnce({ data: [] });
 
     renderPage();
 
@@ -223,5 +289,39 @@ describe("fase 4: vista del CLIENTE", () => {
     expect(
       screen.getByText("Tu entrenador todavía no te asignó rutinas")
     ).toBeInTheDocument();
+    expect(screen.getByText("Historial de acompañamientos")).toBeInTheDocument();
+  });
+
+  it("muestra el historial de acompañamientos con la más reciente primero", async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({ data: [] });
+    vi.mocked(api.get).mockRejectedValueOnce({
+      isAxiosError: true,
+      response: { status: 404 },
+    });
+    vi.mocked(api.get).mockResolvedValueOnce({
+      data: [
+        {
+          id: 5,
+          entrenadorNombre: "Coach Ana",
+          activa: true,
+          asignadoEn: "2026-08-01T10:00:00",
+        },
+        {
+          id: 3,
+          entrenadorNombre: "Coach Leo",
+          activa: false,
+          asignadoEn: "2026-07-15T10:00:00",
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(
+      await screen.findByText("Historial de acompañamientos")
+    ).toBeInTheDocument();
+    expect(screen.getByText("Coach Leo")).toBeInTheDocument();
+    expect(screen.getByText("ACTIVO")).toBeInTheDocument();
+    expect(screen.getByText("CANCELADO")).toBeInTheDocument();
   });
 });

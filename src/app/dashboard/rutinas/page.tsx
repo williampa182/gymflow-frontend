@@ -1,12 +1,14 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import axios from "axios";
 import api from "@/lib/api";
 import { getRol } from "@/lib/auth";
+import { formatFecha } from "@/lib/format";
 import type {
   ClienteElegibleDTO,
   EjercicioRequestDTO,
+  HistorialAcompanamientoDTO,
   MiEntrenadorDTO,
   Rol,
   RutinaRequestDTO,
@@ -72,6 +74,7 @@ export default function RutinasPage() {
   // CLIENTE
   const [misRutinas, setMisRutinas] = useState<RutinaResponseDTO[]>([]);
   const [miEntrenador, setMiEntrenador] = useState<MiEntrenadorDTO | null>(null);
+  const [historial, setHistorial] = useState<HistorialAcompanamientoDTO[]>([]);
 
   // Modal crear/editar rutina
   const [mostrarForm, setMostrarForm] = useState(false);
@@ -104,12 +107,16 @@ export default function RutinasPage() {
         setRutinas(rutinasRes.data);
         setClientes(clientesRes.data);
       } else {
-        const [rutinasRes, entrenadorRes] = await Promise.all([
+        const [rutinasRes, entrenadorRes, historialRes] = await Promise.all([
           api.get<RutinaResponseDTO[]>("/rutinas/mias"),
           api.get<MiEntrenadorDTO>("/entrenador/mio").catch(() => null),
+          api
+            .get<HistorialAcompanamientoDTO[]>("/entrenador/mi-historial")
+            .catch(() => null),
         ]);
         setMisRutinas(rutinasRes.data);
         setMiEntrenador(entrenadorRes?.data ?? null);
+        setHistorial(historialRes?.data ?? []);
       }
     } catch (err) {
       setError("No se pudieron cargar los datos.");
@@ -188,6 +195,16 @@ export default function RutinasPage() {
     }
   }
 
+  async function quitarRutina(rutinaId: number, clienteId: number) {
+    try {
+      await api.delete(`/rutinas/${rutinaId}/asignar/${clienteId}`);
+      notificar("exito", "Rutina quitada");
+      cargarDatos();
+    } catch (err) {
+      notificar("error", mensajeDeError(err, "No se pudo quitar la rutina"));
+    }
+  }
+
   async function acompañar(clienteId: number) {
     try {
       await api.post(`/entrenador/asignarme/${clienteId}`);
@@ -215,6 +232,14 @@ export default function RutinasPage() {
   }
 
   const acompanados = clientes.filter((c) => c.yaAcompaño);
+
+  // Rutinas asignadas a un cliente, derivadas de rutinas[].asignados
+  // (una sola fuente de datos para las dos vistas de "quitar").
+  function rutinasDeCliente(clienteId: number) {
+    return rutinas
+      .filter((r) => r.asignados.some((a) => a.id === clienteId))
+      .map((r) => ({ id: r.id, nombre: r.nombre }));
+  }
 
   return (
     <div>
@@ -269,39 +294,70 @@ export default function RutinasPage() {
                   </tr>
                 </thead>
                 <tbody className={tableRowDivide}>
-                  {clientes.map((cliente) => (
-                    <tr key={cliente.id}>
-                      <td className={tableCellMuted}>{cliente.nombre}</td>
-                      <td className={tableCellMuted}>
-                        {cliente.yaAcompaño ? (
-                          <span className="inline-flex rounded-sm bg-moss-600/15 px-2 py-0.5 font-mono text-xs text-moss-400">
-                            Acompañado por vos
-                          </span>
-                        ) : (
-                          <span className="font-mono text-xs text-concrete-300">
-                            Sin acompañante
-                          </span>
+                  {clientes.map((cliente) => {
+                    const rutinasDelCliente = rutinasDeCliente(cliente.id);
+                    return (
+                      <Fragment key={cliente.id}>
+                        <tr>
+                          <td className={tableCellMuted}>{cliente.nombre}</td>
+                          <td className={tableCellMuted}>
+                            {cliente.yaAcompaño ? (
+                              <span className="inline-flex rounded-sm bg-moss-600/15 px-2 py-0.5 font-mono text-xs text-moss-400">
+                                Acompañado por vos
+                              </span>
+                            ) : (
+                              <span className="font-mono text-xs text-concrete-300">
+                                Sin acompañante
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            {cliente.yaAcompaño ? (
+                              <button
+                                onClick={() => cancelarAcompañamiento(cliente.id)}
+                                className={`text-xs ${buttonSecondaryDark}`}
+                              >
+                                Cancelar acompañamiento
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => acompañar(cliente.id)}
+                                className={`text-xs ${buttonPrimary}`}
+                              >
+                                Acompañar
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                        {cliente.yaAcompaño && rutinasDelCliente.length > 0 && (
+                          <tr className="bg-ink-900/40">
+                            <td colSpan={3} className="px-4 pb-3 pt-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="font-mono text-xs text-concrete-300">
+                                  Rutinas asignadas:
+                                </span>
+                                {rutinasDelCliente.map((rutina) => (
+                                  <span
+                                    key={rutina.id}
+                                    className="inline-flex items-center gap-1 rounded-sm border border-ink-700 bg-ink-900 px-2 py-0.5 font-mono text-xs text-concrete-200"
+                                  >
+                                    {rutina.nombre}
+                                    <button
+                                      onClick={() => quitarRutina(rutina.id, cliente.id)}
+                                      className="text-hazard-400 hover:text-hazard-300"
+                                      aria-label={`Quitar ${rutina.nombre} a ${cliente.nombre}`}
+                                    >
+                                      ✕
+                                    </button>
+                                  </span>
+                                ))}
+                              </div>
+                            </td>
+                          </tr>
                         )}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        {cliente.yaAcompaño ? (
-                          <button
-                            onClick={() => cancelarAcompañamiento(cliente.id)}
-                            className={`text-xs ${buttonSecondaryDark}`}
-                          >
-                            Cancelar acompañamiento
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => acompañar(cliente.id)}
-                            className={`text-xs ${buttonPrimary}`}
-                          >
-                            Acompañar
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                      </Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             )}
@@ -427,6 +483,27 @@ export default function RutinasPage() {
                           </button>
                         </div>
                       )}
+
+                      {rutina.asignados.length > 0 && (
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <span className={`font-mono text-xs ${labelClass}`}>Asignada a:</span>
+                          {rutina.asignados.map((cliente) => (
+                            <span
+                              key={cliente.id}
+                              className="inline-flex items-center gap-1 rounded-sm border border-ink-700 bg-ink-900 px-2 py-0.5 font-mono text-xs text-concrete-200"
+                            >
+                              {cliente.nombre}
+                              <button
+                                onClick={() => quitarRutina(rutina.id, cliente.id)}
+                                className="text-hazard-400 hover:text-hazard-300"
+                                aria-label={`Quitar ${rutina.nombre} a ${cliente.nombre}`}
+                              >
+                                ✕
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -461,6 +538,50 @@ export default function RutinasPage() {
               </div>
             ) : (
               <EmptyState mensaje="Todavía no tenés un entrenador asignado" />
+            )}
+          </section>
+
+          {/* Historial de acompañamientos */}
+          <section className={tableWrap}>
+            <div className="border-b border-ink-700 px-4 py-3">
+              <h2 className="font-display text-lg font-semibold text-concrete-100">
+                Historial de acompañamientos
+              </h2>
+              <p className="mt-0.5 font-mono text-xs text-concrete-300">
+                Todas las veces que tuviste un entrenador personal
+              </p>
+            </div>
+            {historial.length === 0 ? (
+              <EmptyState mensaje="Todavía no tenés acompañamientos anteriores" />
+            ) : (
+              <table className="w-full text-left">
+                <thead className={tableHead}>
+                  <tr>
+                    <th className={tableHeadCell}>Entrenador</th>
+                    <th className={tableHeadCell}>Desde</th>
+                    <th className={tableHeadCell}>Estado</th>
+                  </tr>
+                </thead>
+                <tbody className={tableRowDivide}>
+                  {historial.map((entrada) => (
+                    <tr key={entrada.id}>
+                      <td className={tableCellMuted}>{entrada.entrenadorNombre}</td>
+                      <td className={tableCellMuted}>{formatFecha(entrada.asignadoEn)}</td>
+                      <td className={tableCellMuted}>
+                        {entrada.activa ? (
+                          <span className="inline-flex rounded-sm bg-moss-600/15 px-2 py-0.5 font-mono text-xs text-moss-400">
+                            ACTIVO
+                          </span>
+                        ) : (
+                          <span className="inline-flex rounded-sm bg-hazard-400/15 px-2 py-0.5 font-mono text-xs text-hazard-400">
+                            CANCELADO
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
           </section>
 
