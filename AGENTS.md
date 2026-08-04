@@ -14,8 +14,10 @@ de tocar cualquier código.
 
 **Antes de proponer o aplicar cualquier cambio, leé en este orden:**
 
-1. `collab/MAPA.md` (en `C:\proyectos\gymflow\`) — índice de todo lo que
-   existe: qué está confirmado, pendiente, qué propuso cada herramienta.
+1. `collab/MAPA.md` (en `C:\proyectos\gymflow\`) — índice de navegación; el
+   estado vigente consolidado vive en `collab/estado/ACTUAL.md`. Lo terminado
+   se archiva en `collab/historial/` (`aplicado/`, `handoffs/`,
+   `propuestas-cerradas/`).
 2. `../gymflow-backend/docs/THREAT_MODEL.md` — estado de verdad de
    seguridad (aplica también a decisiones de frontend como CSRF/headers).
 3. `../gymflow-backend/docs/ARCHITECTURE.md` — decisiones de diseño.
@@ -28,7 +30,7 @@ de tocar cualquier código.
 **No apliques cambios directo al código sin dejar rastro.** Generá una
 propuesta en `collab/propuestas/<tu-nombre>/`, otra herramienta o Claude la
 revisa contra el código real, William decide si se aplica, y queda
-registrado en `collab/aplicado/`.
+registrado en `collab/historial/aplicado/`.
 
 ## Buena práctica ya demostrada en este proyecto
 
@@ -54,9 +56,11 @@ formatos propietarios.
 ## Obsidian
 
 William tiene `C:\proyectos\gymflow\` abierto como bóveda de Obsidian, con
-`collab/MAPA.md` como nodo central del grafo. Cualquier `.md` nuevo en
-`collab/` debería agregarse ahí con link relativo Markdown estándar (no
-wikilinks `[[...]]`).
+`collab/MAPA.md` como nodo central del grafo. Todo `.md` nuevo de `collab/`
+se archiva en su carpeta correspondiente de `historial/` (o `propuestas/` si
+es activa) con link relativo Markdown estándar (no wikilinks `[[...]]`);
+`MAPA.md` solo enlaza a la estructura y al estado vigente, no a cada archivo
+nuevo.
 
 ## Stack
 
