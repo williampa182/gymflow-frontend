@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
   // igual acá). Sin X-Frame-Options el sitio es embebible en un iframe
   // ajeno (clickjacking); sin HSTS la primera conexión de cada usuario es
   // vulnerable a downgrade HTTPS->HTTP en redes no confiables.
+  //
+  // M2 (2026-08-04): la CSP completa con nonce se sirve desde proxy.ts
+  // porque el nonce es por request; sacada de acá para evitar doble header
+  // (los browsers ANDean ambas políticas). frame-ancestors 'none' vive
+  // ahora dentro de esa CSP.
   async headers() {
     return [
       {
@@ -19,13 +24,6 @@ const nextConfig: NextConfig = {
           {
             key: "Strict-Transport-Security",
             value: "max-age=63072000; includeSubDomains",
-          },
-          {
-            // CSP conservador: ajustar si se agregan fuentes/scripts
-            // externos (ej. CDNs). frame-ancestors 'none' refuerza
-            // X-Frame-Options para navegadores modernos.
-            key: "Content-Security-Policy",
-            value: "frame-ancestors 'none'",
           },
         ],
       },

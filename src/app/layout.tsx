@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { Oswald, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -28,11 +29,18 @@ export const metadata: Metadata = {
   description: "Gestión de gimnasio: planes, usuarios y suscripciones",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // M2 (CSP con nonce): los nonces se aplican durante SSR; por eso todas las
+  // páginas deben renderizarse de forma dinámica (guía oficial
+  // content-security-policy.md — PPR/cache components son incompatibles con
+  // nonce). El nonce NO se distribuye desde acá: Next lo extrae del header
+  // CSP de la request (x-nonce) automáticamente.
+  await connection();
+
   return (
     <html
       lang="es"

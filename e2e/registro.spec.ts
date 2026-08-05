@@ -22,7 +22,9 @@ test("un usuario nuevo puede registrarse y llegar a su dashboard", async ({
 
   await page.getByLabel("Nombre").fill("Smoke Test");
   await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Contraseña").fill(password);
+  // exact: true — el toggle "Mostrar contraseña" (aria-label) contiene el
+  // substring "Contraseña" y rompía el match estricto por defecto.
+  await page.getByLabel("Contraseña", { exact: true }).fill(password);
   await page.getByRole("button", { name: /crear cuenta/i }).click();
 
   // Registro exitoso debe dejar al usuario logueado y en su dashboard,
