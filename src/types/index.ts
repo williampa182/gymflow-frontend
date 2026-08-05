@@ -179,3 +179,61 @@ export interface HistorialAcompanamientoDTO {
   activa: boolean;
   asignadoEn: string;
 }
+
+// ─── Fase 5: asistencias, carnet y kiosco ─────────────────────────
+// Coinciden con los DTOs del backend (AsistenciaResponseDTO,
+// AsistenciaSemanaDTO, AsistenciaAcompanadoDTO, CarnetResponseDTO,
+// KioscoConfigResponseDTO, KioscoKeyResponseDTO, dashboard #13).
+
+export type MetodoAsistencia = "SELF" | "ADMIN" | "KIOSK_CARNET";
+
+export interface AsistenciaResponseDTO {
+  id: number;
+  usuarioId: number;
+  nombre: string;
+  fecha: string; // "YYYY-MM-DD"
+  entradaEn: string;
+  salidaEn: string | null;
+  metodo: MetodoAsistencia;
+}
+
+export interface AsistenciaSemanaDTO {
+  fechaDesde: string;
+  fechaHasta: string;
+  total: number;
+  asistencias: AsistenciaResponseDTO[];
+}
+
+export interface AsistenciaAcompanadoDTO {
+  clienteId: number;
+  clienteNombre: string;
+  asistencias: AsistenciaResponseDTO[];
+}
+
+export interface CarnetResponseDTO {
+  codigoCarnet: string;
+  // Solo presente en la vista ADMIN (reimpresión); el CLIENTE solo recibe el código.
+  nombre?: string;
+}
+
+export interface KioscoConfigResponseDTO {
+  configurada: boolean;
+}
+
+export interface KioscoKeyResponseDTO {
+  key: string;
+}
+
+export interface AsistenciaDiaStat {
+  fecha: string;
+  cantidad: number;
+}
+
+export interface AsistenciasSemanaStatsDTO {
+  asistenciasHoy: number;
+  asistenciasSemana: AsistenciaDiaStat[];
+}
+
+export interface AdminMarcarAsistenciaRequestDTO {
+  usuarioId: number;
+}

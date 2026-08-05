@@ -15,6 +15,8 @@ import { PlateStat } from "@/components/PlateStat";
 import { SkeletonStats } from "@/components/Skeleton";
 import type { DashboardAdminStatsDTO, Rol, SuscripcionResponseDTO } from "@/types";
 import AdminDashboardCharts from "./_components/AdminDashboardCharts";
+import { AsistenciasSemanaCard } from "./_components/AsistenciasSemanaCard";
+import { MiCarnet } from "./_components/MiCarnet";
 
 const ROLES_PERMITIDOS: Rol[] = ["ADMIN", "CLIENTE", "ENTRENADOR"];
 const MIN_BOOT_SKELETON_MS = 1500;
@@ -133,7 +135,7 @@ export default function DashboardPage() {
           ingresosEstimados={ingresosEstimados}
         />
       ) : (
-        <UserDashboard suscripciones={suscripciones} />
+        <UserDashboard suscripciones={suscripciones} rol={rol} />
       )}
     </div>
   );
@@ -210,7 +212,13 @@ function AdminDashboard({
   );
 }
 
-function UserDashboard({ suscripciones }: { suscripciones: SuscripcionResponseDTO[] }) {
+function UserDashboard({
+  suscripciones,
+  rol,
+}: {
+  suscripciones: SuscripcionResponseDTO[];
+  rol: Rol;
+}) {
   const suscripcionActiva = suscripciones.find((item) => item.estado === "ACTIVA");
 
   return (
@@ -247,11 +255,8 @@ function UserDashboard({ suscripciones }: { suscripciones: SuscripcionResponseDT
           )}
         </section>
 
-        <section className={cardDark} aria-labelledby="asistencias-semana">
-          <h2 id="asistencias-semana" className="font-display text-lg font-bold text-concrete-100">
-            Asistencias esta semana
-          </h2>
-          <EmptyState mensaje="Todavía no hay registros de asistencia esta semana." />
+        <section aria-labelledby="asistencias-semana">
+          <AsistenciasSemanaCard rol={rol === "ENTRENADOR" ? "ENTRENADOR" : "CLIENTE"} />
         </section>
       </div>
 
@@ -264,6 +269,12 @@ function UserDashboard({ suscripciones }: { suscripciones: SuscripcionResponseDT
           Ver mis suscripciones
         </Link>
       </section>
+
+      {rol === "CLIENTE" && (
+        <div className="mt-8">
+          <MiCarnet />
+        </div>
+      )}
     </>
   );
 }

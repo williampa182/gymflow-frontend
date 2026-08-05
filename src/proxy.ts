@@ -29,7 +29,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 // Rutas del dashboard que solo puede ver ADMIN (coincide con @PreAuthorize del backend)
-const RUTAS_SOLO_ADMIN = ["/dashboard/usuarios"];
+const RUTAS_SOLO_ADMIN = ["/dashboard/usuarios", "/dashboard/asistencias"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

@@ -6,6 +6,7 @@ import { ToastProvider } from "@/lib/toast";
 vi.mock("@/lib/api", () => ({
   default: {
     get: vi.fn(),
+    post: vi.fn(),
   },
 }));
 
@@ -79,6 +80,19 @@ const subscription = {
   creadoEn: "2026-07-13T10:00:00",
 };
 
+const semanaVacia = {
+  data: {
+    fechaDesde: "2026-08-03",
+    fechaHasta: "2026-08-09",
+    total: 0,
+    asistencias: [],
+  },
+};
+
+const acompanadosVacios = { data: [] };
+
+const carnetCliente = Promise.resolve({ data: { codigoCarnet: "ABCDEF1" } });
+
 function renderDashboard() {
   return render(
     <ToastProvider>
@@ -147,7 +161,12 @@ describe("dashboard ADMIN", () => {
 describe("dashboard CLIENTE y ENTRENADOR", () => {
   it("CLIENTE ve su plan, vencimiento, estado vacío de asistencias y no solicita datos ADMIN", async () => {
     vi.mocked(getRol).mockReturnValue("CLIENTE");
-    vi.mocked(api.get).mockResolvedValueOnce(ownSubscriptionsPage([subscription]));
+    vi.mocked(api.get).mockImplementation((url) => {
+      if (url === "/suscripciones/mis") return ownSubscriptionsPage([subscription]) as never;
+      if (url === "/asistencias/mi/semana") return semanaVacia as never;
+      if (url === "/asistencias/mi/carnet") return carnetCliente as never;
+      return Promise.reject(new Error(`URL inesperada: ${url}`));
+    });
 
     renderDashboard();
 
@@ -157,26 +176,35 @@ describe("dashboard CLIENTE y ENTRENADOR", () => {
       expect(screen.getByText("11/8/2026")).toBeInTheDocument();
     }, { timeout: 2500 });
 
-    expect(screen.getByText("Asistencias esta semana")).toBeInTheDocument();
-    expect(screen.getByText("Todavía no hay registros de asistencia esta semana.")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("Asistencias esta semana")).toBeInTheDocument();
+      expect(screen.getByText("Todavía no hay registros de asistencia esta semana.")).toBeInTheDocument();
+      expect(screen.getByText("Mi carnet")).toBeInTheDocument();
+    }, { timeout: 2500 });
     expect(screen.getByRole("link", { name: "Ver mis suscripciones" })).toHaveAttribute(
       "href",
       "/dashboard/suscripciones"
     );
     expect(screen.queryByText("Ingresos estimados")).not.toBeInTheDocument();
     expect(api.get).toHaveBeenCalledWith("/suscripciones/mis");
+    expect(api.get).toHaveBeenCalledWith("/asistencias/mi/semana");
     expect(api.get).not.toHaveBeenCalledWith("/dashboard/admin/estadisticas");
   });
 
   it("ENTRENADOR muestra un encabezado propio y EmptyState si no tiene plan", async () => {
     vi.mocked(getRol).mockReturnValue("ENTRENADOR");
-    vi.mocked(api.get).mockResolvedValueOnce(ownSubscriptionsPage([]));
+    vi.mocked(api.get).mockImplementation((url) => {
+      if (url === "/suscripciones/mis") return ownSubscriptionsPage([]) as never;
+      if (url === "/asistencias/acompanados/semana") return acompanadosVacios as never;
+      return Promise.reject(new Error(`URL inesperada: ${url}`));
+    });
 
     renderDashboard();
 
     await waitFor(() => {
       expect(screen.getByText("Panel del entrenador")).toBeInTheDocument();
       expect(screen.getByText("No tienes un plan activo.")).toBeInTheDocument();
+      expect(screen.getByText("Todavía no tienes clientes acompañados.")).toBeInTheDocument();
     }, { timeout: 2500 });
   });
 });

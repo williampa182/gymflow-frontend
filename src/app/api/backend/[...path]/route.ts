@@ -64,6 +64,11 @@ async function proxy(request: NextRequest, path: string[]) {
   }
 
   const token = request.cookies.get("token")?.value;
+  // Fase 5: el kiosco autentica con X-Kiosk-Key (credencial de dispositivo,
+  // permitAll en el backend). La whitelist es EXACTA: el header solo se
+  // reenvía hacia /api/asistencias/kiosk, nunca a otras rutas.
+  const esCheckInKiosk = path.join("/") === "asistencias/kiosk";
+  const kioskKey = esCheckInKiosk ? request.headers.get("x-kiosk-key") : null;
 
   const targetUrl = new URL(`${BACKEND_URL}/api/${path.join("/")}`);
   // Reenvía los query params tal cual (?rol=ADMIN, ?activo=true, etc.)
@@ -79,6 +84,7 @@ async function proxy(request: NextRequest, path: string[]) {
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(kioskKey ? { "X-Kiosk-Key": kioskKey } : {}),
     },
     body: body && body.length > 0 ? body : undefined,
   });

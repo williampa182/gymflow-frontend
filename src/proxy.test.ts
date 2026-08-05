@@ -25,4 +25,12 @@ describe("proxy de rutas del dashboard", () => {
 
     expect(response.headers.get("location")).toBe("http://localhost:3000/dashboard");
   });
+
+  it("mantiene asistencias (Fase 5) restringido a ADMIN", () => {
+    const request = requestWithSession("ENTRENADOR", "/dashboard/asistencias");
+
+    const response = proxy(request);
+
+    expect(response.headers.get("location")).toBe("http://localhost:3000/dashboard");
+  });
 });
