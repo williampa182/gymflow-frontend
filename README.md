@@ -50,6 +50,7 @@ como referencia de proceso, no solo de código.
 - Registro y login con manejo de sesión vía cookie httpOnly
 - CRUD de planes y suscripciones (según rol)
 - Dashboard administrativo con métricas (gráficos con Recharts)
+- Asistencias (Fase 5): check-in con fecha, carnet con QR y resumen semanal
 - Chat de soporte integrado (`ChatWidget` flotante) que consume
   `POST /api/chat` del backend (RAG simple sobre los planes + guía del
   dashboard), con persistencia de la conversación en `sessionStorage`,
@@ -98,4 +99,6 @@ con el backend (ver README de
 para el detalle completo). En el frontend, el punto central fue el manejo
 de sesión vía cookie httpOnly en vez de almacenamiento accesible por
 JavaScript, además de la restricción de visibilidad de planes inactivos
-para usuarios no admin.
+para usuarios no admin y la CSP completa con nonce por request servida
+desde `proxy.ts` (M2, `script-src 'self' 'nonce-…' 'strict-dynamic'`,
+verificado con tests y e2e de headers).
