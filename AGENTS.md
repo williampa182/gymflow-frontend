@@ -32,6 +32,16 @@ propuesta en `collab/propuestas/<tu-nombre>/`, otra herramienta o Claude la
 revisa contra el código real, William decide si se aplica, y queda
 registrado en `collab/historial/aplicado/`.
 
+## Reglas de roles y commits (2026-08-05)
+
+- **Claude es el supervisor/jefe y el committer principal** de los repos: el
+  flujo normal es que OpenCode/otros agentes dejen el trabajo listo en disco
+  (working tree commiteado) y Claude revise y pushee.
+- **Nunca `git commit` ni `git push` sin aprobación explícita de William**,
+  aunque el prompt de la sesión no lo repita — es el comportamiento por
+  defecto exigido en este repo. OpenCode solo commitea/pushea cuando William
+  lo aprueba explícitamente en la sesión por necesidad operativa.
+
 ## Buena práctica ya demostrada en este proyecto
 
 La primera propuesta de GLM-5.2 (dashboard ADMIN) verificó cada afirmación
