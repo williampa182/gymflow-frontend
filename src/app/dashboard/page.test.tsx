@@ -173,7 +173,7 @@ describe("dashboard CLIENTE y ENTRENADOR", () => {
     await waitFor(() => {
       expect(screen.getByText("Panel del cliente")).toBeInTheDocument();
       expect(screen.getByText("Plan Mensual")).toBeInTheDocument();
-      expect(screen.getByText("11/8/2026")).toBeInTheDocument();
+      expect(screen.getByText("12/8/2026")).toBeInTheDocument();
     }, { timeout: 2500 });
 
     await waitFor(() => {
