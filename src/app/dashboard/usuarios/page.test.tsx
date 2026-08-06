@@ -214,4 +214,58 @@ describe("dashboard/usuarios/page.tsx", () => {
       );
     });
   });
+
+  it("elimina un usuario con confirmacion de dos pasos y recarga la lista", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.get)
+      .mockResolvedValueOnce(pageResponse(USUARIOS_MOCK))
+      .mockResolvedValueOnce(pageResponse([USUARIOS_MOCK[1]]));
+    vi.mocked(api.delete).mockResolvedValueOnce({ data: {} });
+
+    renderUsuarios();
+
+    await waitFor(() => {
+      expect(screen.getByText("ana@example.com")).toBeInTheDocument();
+    });
+
+    await user.click(screen.getAllByRole("button", { name: "Eliminar" })[0]);
+
+    expect(api.delete).not.toHaveBeenCalled();
+    expect(
+      screen.getAllByRole("button", { name: "¿Eliminar? Sí" })
+    ).toHaveLength(1);
+
+    await user.click(screen.getByRole("button", { name: "¿Eliminar? Sí" }));
+
+    await waitFor(() => {
+      expect(api.delete).toHaveBeenCalledWith("/usuarios/1");
+      expect(screen.getByRole("status")).toHaveTextContent("Usuario eliminado.");
+      expect(api.get).toHaveBeenCalledTimes(2);
+    });
+    expect(screen.queryByText("ana@example.com")).not.toBeInTheDocument();
+  });
+
+  it("muestra toast y error visible si falla la eliminacion", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.get).mockResolvedValueOnce(pageResponse(USUARIOS_MOCK));
+    vi.mocked(api.delete).mockRejectedValueOnce(new Error("Network error"));
+
+    renderUsuarios();
+
+    await waitFor(() => {
+      expect(screen.getByText("ana@example.com")).toBeInTheDocument();
+    });
+
+    await user.click(screen.getAllByRole("button", { name: "Eliminar" })[0]);
+    await user.click(screen.getByRole("button", { name: "¿Eliminar? Sí" }));
+
+    await waitFor(() => {
+      expect(
+        screen.getAllByText("No se pudo eliminar el usuario.")
+      ).toHaveLength(2);
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "No se pudo eliminar el usuario."
+      );
+    });
+  });
 });

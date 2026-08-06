@@ -35,6 +35,8 @@ export default function UsuariosPage() {
   const [error, setError] = useState<string | null>(null);
   const [cambiandoId, setCambiandoId] = useState<number | null>(null);
   const [confirmandoId, setConfirmandoId] = useState<number | null>(null);
+  const [eliminandoId, setEliminandoId] = useState<number | null>(null);
+  const [confirmandoEliminacionId, setConfirmandoEliminacionId] = useState<number | null>(null);
   const [rolPendiente, setRolPendiente] = useState<{
     id: number;
     rol: Rol;
@@ -43,6 +45,7 @@ export default function UsuariosPage() {
   const [cambiandoRolId, setCambiandoRolId] = useState<number | null>(null);
   const confirmarTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const confirmarRolTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const confirmarEliminacionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // El timeout evita que el botón quede pegado en "¿Seguro?" para siempre.
   useEffect(() => {
@@ -50,6 +53,9 @@ export default function UsuariosPage() {
       if (confirmarTimeoutRef.current) clearTimeout(confirmarTimeoutRef.current);
       if (confirmarRolTimeoutRef.current) {
         clearTimeout(confirmarRolTimeoutRef.current);
+      }
+      if (confirmarEliminacionTimeoutRef.current) {
+        clearTimeout(confirmarEliminacionTimeoutRef.current);
       }
     };
   }, []);
@@ -146,6 +152,35 @@ export default function UsuariosPage() {
       setCambiandoRolId(null);
       setConfirmandoRolId(null);
     }
+  }
+
+  async function eliminarUsuario(usuario: UsuarioResponseDTO) {
+    setEliminandoId(usuario.id);
+    setError(null);
+    try {
+      await api.delete(`/usuarios/${usuario.id}`);
+      notificar("exito", "Usuario eliminado.");
+      await cargarUsuarios();
+    } catch (err) {
+      console.error(err);
+      const mensaje = "No se pudo eliminar el usuario.";
+      setError(mensaje);
+      notificar("error", mensaje);
+    } finally {
+      setEliminandoId(null);
+      setConfirmandoEliminacionId(null);
+    }
+  }
+
+  function pedirConfirmacionEliminacion(id: number) {
+    setConfirmandoEliminacionId(id);
+    if (confirmarEliminacionTimeoutRef.current) {
+      clearTimeout(confirmarEliminacionTimeoutRef.current);
+    }
+    confirmarEliminacionTimeoutRef.current = setTimeout(
+      () => setConfirmandoEliminacionId(null),
+      4000
+    );
   }
 
   if (!autorizado) {
@@ -258,6 +293,26 @@ className={buttonSecondaryDark}
                           {cambiandoId === u.id ? "..." : "Activar"}
                         </button>
                       )}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          confirmandoEliminacionId === u.id
+                            ? eliminarUsuario(u)
+                            : pedirConfirmacionEliminacion(u.id)
+                        }
+                        disabled={eliminandoId === u.id}
+                        className={
+                          confirmandoEliminacionId === u.id
+                            ? "rounded-md bg-rust-600 px-3 py-1 text-xs font-medium text-concrete-50 transition hover:bg-rust-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            : "rounded-md border border-rust-700/60 px-3 py-1 text-xs font-medium text-rust-400 transition hover:bg-rust-900/30 disabled:cursor-not-allowed disabled:opacity-50"
+                        }
+                      >
+                        {eliminandoId === u.id
+                          ? "..."
+                          : confirmandoEliminacionId === u.id
+                          ? "¿Eliminar? Sí"
+                          : "Eliminar"}
+                      </button>
                     </div>
                   </td>
                 </tr>
