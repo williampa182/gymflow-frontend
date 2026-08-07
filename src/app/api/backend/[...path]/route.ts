@@ -92,7 +92,14 @@ async function proxy(request: NextRequest, path: string[]) {
   const responseText = await backendRes.text();
   const contentType = backendRes.headers.get("content-type") ?? "application/json";
 
-  return new NextResponse(responseText, {
+  // Status sin body permitido (204 No Content, 304 Not Modified, 205 Reset
+  // Content): el constructor de Response/NextResponse rechaza un string body
+  // con estos códigos ("Invalid response status code 204") y el proxy
+  // terminaría devolviendo 500 al navegador aunque el backend respondió
+  // correctamente (bug detectado con DELETE /api/usuarios/{id} en prod).
+  const sinBody = backendRes.status === 204 || backendRes.status === 205 || backendRes.status === 304;
+
+  return new NextResponse(sinBody ? null : responseText, {
     status: backendRes.status,
     headers: { "content-type": contentType },
   });
