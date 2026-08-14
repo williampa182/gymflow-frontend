@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LoginRequest } from "@/types";
 import { authErrorBanner } from "@/lib/ui";
@@ -14,9 +14,18 @@ export default function LoginPage() {
 
   const [form, setForm] = useState<LoginRequest>({ email: "", password: "" });
   const [error, setError] = useState<string | null>(null);
+  const [sesionExpirada, setSesionExpirada] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const passwordRef = useRef<HTMLInputElement>(null);
+
+  // El interceptor de api redirige a /login?sesion=expirada cuando el JWT
+  // venció (hallazgo B-06): acá se explica el motivo al usuario.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("sesion") === "expirada") {
+      setSesionExpirada(true);
+    }
+  }, []);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -123,6 +132,9 @@ export default function LoginPage() {
           </div>
         </div>
 
+        {sesionExpirada && !error && (
+          <p className={authErrorBanner}>Tu sesión expiró. Ingresá de nuevo para continuar.</p>
+        )}
         {error && <p className={authErrorBanner}>{error}</p>}
 
         <button
@@ -131,7 +143,7 @@ export default function LoginPage() {
           className="auth-button-primary flex w-full items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold uppercase tracking-wide"
         >
           {loading && <ButtonSpinner />}
-          {loading ? "Ingresando..." : "Ingresar"}
+          {loading ? "Ingresando…" : "Ingresar"}
         </button>
       </form>
     </AuthShell>
