@@ -3,6 +3,11 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
 
+  // Pentest OWASP ZAP 2026-08-13: el header X-Powered-By: Next.js
+  // filtraba el framework (fingerprinting, hallazgo Low). Next lo
+  // desactiva con este flag (next.config.js poweredByHeader).
+  poweredByHeader: false,
+
   // Headers de seguridad HTTP. Antes de esto no había ninguno configurado
   // explícitamente (hallazgo 3.7 del THREAT_MODEL.md del backend, aplica
   // igual acá). Sin X-Frame-Options el sitio es embebible en un iframe
