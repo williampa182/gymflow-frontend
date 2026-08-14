@@ -124,7 +124,7 @@ export function Select({
         tabIndex={-1}
         className="sr-only"
       >
-        <option value="">{placeholder ?? "Selecciona..."}</option>
+        <option value="">{placeholder ?? "Selecciona…"}</option>
         {options.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}
@@ -146,7 +146,7 @@ export function Select({
             seleccion ? "text-concrete-50" : "text-concrete-300"
           }`}
         >
-          {seleccion ? seleccion.label : (placeholder ?? "Selecciona...")}
+          {seleccion ? seleccion.label : (placeholder ?? "Selecciona…")}
         </span>
         <span
           className={`flex shrink-0 items-center border-l border-ink-700 px-2.5 transition ${

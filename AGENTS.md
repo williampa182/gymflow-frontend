@@ -77,3 +77,5 @@ nuevo.
 Next.js (App Router) + React 19 + Tailwind v4 + TypeScript. JWT en cookie
 httpOnly, proxeado por `src/app/api/backend/[...path]/route.ts` hacia el
 backend Spring Boot.
+
+Copy: seguir `docs/glosario-copy.md`.

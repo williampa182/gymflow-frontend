@@ -141,7 +141,7 @@ export default function ChatWidget() {
                 onChange={(e) => setTexto(e.target.value.slice(0, MAX_MENSAJE))}
                 onKeyDown={handleKeyDown}
                 rows={1}
-                placeholder="Escribe tu pregunta..."
+                placeholder="Escribe tu pregunta…"
                 aria-label="Mensaje para soporte"
                 className="auth-input max-h-24 flex-1 resize-none rounded-md px-3 py-2 text-sm outline-none"
               />

@@ -61,7 +61,7 @@ export function MiCarnet() {
               {carnet.codigoCarnet}
             </p>
             <p className="mt-1 text-xs text-concrete-300">
-              Presentanos este código o QR en recepción.
+              Preséntanos este código o QR en recepción.
             </p>
           </div>
         </div>
