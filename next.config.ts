@@ -14,7 +14,10 @@ const nextConfig: NextConfig = {
   // (los browsers ANDean ambas políticas). frame-ancestors 'none' vive
   // ahora dentro de esa CSP.
   async headers() {
-    return [
+    const headers: {
+      source: string;
+      headers: { key: string; value: string }[];
+    }[] = [
       {
         source: "/:path*",
         headers: [
@@ -28,6 +31,19 @@ const nextConfig: NextConfig = {
         ],
       },
     ];
+
+    // Los chunks compilados llevan hash de contenido: cache inmutables en
+    // producción reduce fallos de chunk por caché stale (B-01).
+    if (process.env.NODE_ENV === "production") {
+      headers.push({
+        source: "/_next/static/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      });
+    }
+
+    return headers;
   },
 };
 
