@@ -15,9 +15,9 @@ Proyecto de portafolio construido con un flujo de colaboración
 multi-agente (ver `AGENTS.md`), documentado en detalle para servir también
 como referencia de proceso, no solo de código.
 
-**Demo en vivo:** [gymflow-frontend-production.up.railway.app](https://gymflow-frontend-production.up.railway.app)
+**Demo en vivo:** [gymflow-frontend-ten.vercel.app](https://gymflow-frontend-ten.vercel.app)
 · **Backend:** [gymflow-backend](https://github.com/williampa182/gymflow-backend) ·
-[demo API](https://gymflow-backend-production-0a1b.up.railway.app)
+[demo API](https://gymflow-backend-e3h6.onrender.com)
 
 ## Stack
 
@@ -28,7 +28,7 @@ como referencia de proceso, no solo de código.
 - **Recharts** para las visualizaciones del dashboard admin
 - **Vitest** + Testing Library para tests unitarios, **Playwright** para
   e2e
-- **GitHub Actions** para CI/CD, despliegue en **Railway**
+- **GitHub Actions** para CI/CD; despliegue en **Vercel** (2026-08-14), backend en Render
 
 ## Decisiones técnicas
 

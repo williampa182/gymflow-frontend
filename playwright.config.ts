@@ -6,8 +6,14 @@ import { defineConfig, devices } from "@playwright/test";
  * y cuáles ya tienen test automatizado.
  *
  * Por defecto corre contra localhost:3000 (dev server). Para correr
- * contra Railway, exportar BASE_URL antes de ejecutar:
- *   $env:BASE_URL="https://gymflow-frontend-production.up.railway.app"; npx playwright test
+ * contra otro ambiente, exportar BASE_URL antes de ejecutar:
+ *   $env:BASE_URL="https://gymflow-frontend-ten.vercel.app"; npx playwright test
+ *
+ * En CI (frontend-ci.yml) corren solo los specs autónomos
+ * (security-headers y chunk-error-recovery) contra `next start`.
+ * registro.spec.ts y sesion-expirada.spec.ts requieren backend real
+ * (y sesion-expirada un ambiente dedicado con JWT_EXPIRATION=6000):
+ * correrlos manualmente según la cabecera de cada spec.
  */
 export default defineConfig({
   testDir: "./e2e",

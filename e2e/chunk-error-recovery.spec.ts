@@ -1,5 +1,9 @@
 import { test, expect } from "@playwright/test";
 
+// En CI sin backend (frontend-ci.yml, env CI_SIN_BACKEND=1) el registro
+// real no es posible: el test que registra se salta automáticamente.
+const CI_SIN_BACKEND = process.env.CI_SIN_BACKEND === "1";
+
 test("un fallo de chunk no deja la app rota: se recupera", async ({ page }) => {
   const errores: string[] = [];
   page.on("pageerror", (err) => errores.push(err.message));
@@ -39,6 +43,7 @@ test("un fallo de chunk no deja la app rota: se recupera", async ({ page }) => {
 test("registro con recarga completa llega al dashboard con consola limpia", async ({
   page,
 }) => {
+  test.skip(CI_SIN_BACKEND, "requiere backend real (registro vía proxy)");
   const errores: string[] = [];
   page.on("console", (msg) => {
     if (msg.type() === "error") errores.push(msg.text());
