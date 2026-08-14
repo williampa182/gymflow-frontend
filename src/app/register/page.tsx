@@ -16,11 +16,13 @@ const COLOR_SEGMENTO = ["", "bg-rust-600", "bg-hazard-500", "bg-hazard-400", "bg
 
 function escoreContrasena(value: string): number {
   let s = 0;
+  const tiene12 = value.length >= 12;
   if (value.length >= 8) s++;
-  if (value.length >= 12) s++;
+  if (tiene12) s++;
   if (/[A-Z]/.test(value) && /[a-z]/.test(value)) s++;
   if (/\d/.test(value)) s++;
   if (/[^A-Za-z0-9]/.test(value)) s++;
+  if (!tiene12) return Math.min(s, 2);
   return Math.min(s, 4);
 }
 
@@ -34,7 +36,7 @@ export default function RegisterPage() {
     password: "",
     rol: "CLIENTE",
   });
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [primerRegistroSeraAdmin, setPrimerRegistroSeraAdmin] = useState(false);
@@ -66,57 +68,49 @@ export default function RegisterPage() {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
 
+  function validarFormulario(form: RegisterRequest): Record<string, string> {
+    const errores: Record<string, string> = {};
+    if (!form.nombre.trim()) errores.nombre = "El nombre es obligatorio";
+    if (!form.email.trim()) errores.email = "El email es obligatorio";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errores.email = "Email inválido";
+    if (form.password.length < 12) errores.password = "La contraseña debe tener al menos 12 caracteres";
+    return errores;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
-
-    if (form.password.length < 12) {
-      setError("La contraseña debe tener al menos 12 caracteres.");
+    const errores = validarFormulario(form);
+    if (Object.keys(errores).length > 0) {
+      setError(errores);
       return;
     }
-
+    setError({});
     setLoading(true);
-
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-
       if (!res.ok) {
         const data = await res.json().catch(() => null);
+        let msg: string;
         if (res.status === 409) {
-          // §11 (security-deep-dive-additional-findings.md): el mensaje lo
-          // decide el backend (reveal-email-exists-on-register=false, ver
-          // collab/aplicado/2026-07-16-decision-reveal-email-false.md) — el
-          // frontend lo refleja sin asumir ni hardcodear.
-          setError(
-            data?.message ??
-              "No se pudo completar el registro. Si ya tienes una cuenta, intenta iniciar sesión."
-          );
+          msg = data?.message ?? "No se pudo completar el registro. Si ya tienes una cuenta, intenta iniciar sesión.";
         } else if (res.status === 422 || res.status === 400) {
-          setError(
-            data?.message ??
-              "Revisa los datos: el nombre, email y contraseña son obligatorios."
-          );
+          msg = data?.message ?? "Revisa los datos: el nombre, email y contraseña son obligatorios.";
         } else if (res.status === 429) {
-          setError(
-            data?.message ?? "Demasiados intentos. Espera un momento."
-          );
+          msg = data?.message ?? "Demasiados intentos. Espera un momento.";
         } else {
-          setError(
-            data?.message ??
-              "No se pudo completar el registro. Intenta de nuevo."
-          );
+          msg = data?.message ?? "No se pudo completar el registro. Intenta de nuevo.";
         }
+        setError({ server: msg });
         return;
       }
-
       router.push("/dashboard");
       router.refresh();
     } catch {
-      setError("Ocurrió un error inesperado.");
+      setError({ server: "Ocurrió un error inesperado." });
     } finally {
       setLoading(false);
     }
@@ -149,6 +143,7 @@ export default function RegisterPage() {
             className="auth-input w-full px-3 py-2 text-sm"
             placeholder="Tu nombre completo"
           />
+          {error.nombre && <p className="mt-1 text-xs text-hazard-400">{error.nombre}</p>}
         </div>
 
         <div>
@@ -170,6 +165,7 @@ export default function RegisterPage() {
             className="auth-input w-full px-3 py-2 text-sm"
             placeholder="tu@email.com"
           />
+          {error.email && <p className="mt-1 text-xs text-hazard-400">{error.email}</p>}
         </div>
 
         <div>
@@ -228,6 +224,7 @@ export default function RegisterPage() {
           <p id="strength-label" aria-live="polite" className="mt-1 font-mono text-xs text-concrete-300">
             {form.password ? NIVELES_FORTALEZA[nivelFortaleza] : "Mínimo 12 caracteres. Evita contraseñas comunes."}
           </p>
+          {error.password && <p className="mt-1 text-xs text-hazard-400">{error.password}</p>}
         </div>
 
         <fieldset>
@@ -267,7 +264,7 @@ export default function RegisterPage() {
           </p>
         </fieldset>
 
-        {error && <p className={authErrorBanner}>{error}</p>}
+        {error.server && <p className={authErrorBanner}>{error.server}</p>}
 
         <button
           type="submit"
@@ -275,7 +272,7 @@ export default function RegisterPage() {
           className="auth-button-primary flex w-full items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold uppercase tracking-wide"
         >
           {loading && <ButtonSpinner />}
-          {loading ? "Creando cuenta..." : "Crear cuenta"}
+          {loading ? "Creando cuenta…" : "Crear cuenta"}
         </button>
       </form>
     </AuthShell>
