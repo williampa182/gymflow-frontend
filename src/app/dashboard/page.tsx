@@ -19,7 +19,7 @@ import { AsistenciasSemanaCard } from "./_components/AsistenciasSemanaCard";
 import { MiCarnet } from "./_components/MiCarnet";
 
 const ROLES_PERMITIDOS: Rol[] = ["ADMIN", "CLIENTE", "ENTRENADOR"];
-const MIN_BOOT_SKELETON_MS = 1500;
+const MIN_BOOT_SKELETON_MS = 300;
 
 interface PageResponse<T> {
   content: T[];
