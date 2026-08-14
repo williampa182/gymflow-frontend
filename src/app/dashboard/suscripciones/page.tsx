@@ -1,7 +1,7 @@
 "use client";
 
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import axios from "axios";
 import api from "@/lib/api";
 import type {
@@ -13,6 +13,7 @@ import type {
   UsuarioResponseDTO,
 } from "@/types";
 import { Select } from "@/components/Select";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { EmptyState } from "@/components/EmptyState";
 import { PageHeader } from "@/components/PageHeader";
 import { SkeletonFilas } from "@/components/Skeleton";
@@ -94,8 +95,7 @@ export default function SuscripcionesPage() {
 
 
   const [cancelandoId, setCancelandoId] = useState<number | null>(null);
-  const [confirmandoId, setConfirmandoId] = useState<number | null>(null);
-  const confirmarTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [dialogo, setDialogo] = useState<{ id: number } | null>(null);
 
 
   function cerrarForm() {
@@ -105,13 +105,6 @@ export default function SuscripcionesPage() {
 
 
   const modalRef = useFocusTrap(mostrarForm, cerrarForm);
-
-
-  useEffect(() => {
-    return () => {
-      if (confirmarTimeoutRef.current) clearTimeout(confirmarTimeoutRef.current);
-    };
-  }, []);
 
 
   async function cargarSuscripciones() {
@@ -148,7 +141,7 @@ export default function SuscripcionesPage() {
 
     try {
       const [usuariosResponse, planesResponse] = await Promise.all([
-        api.get<PageResponse<UsuarioResponseDTO>>("/usuarios"),
+        api.get<PageResponse<UsuarioResponseDTO>>("/usuarios", { params: { rol: "CLIENTE" } }),
         api.get<PageResponse<PlanResponseDTO>>("/planes", { params: { activo: true } }),
       ]);
       setUsuarios(usuariosResponse.data.content);
@@ -203,15 +196,8 @@ export default function SuscripcionesPage() {
       console.error(err);
     } finally {
       setCancelandoId(null);
-      setConfirmandoId(null);
+      setDialogo(null);
     }
-  }
-
-
-  function pedirCancelacion(id: number) {
-    setConfirmandoId(id);
-    if (confirmarTimeoutRef.current) clearTimeout(confirmarTimeoutRef.current);
-    confirmarTimeoutRef.current = setTimeout(() => setConfirmandoId(null), 4000);
   }
 
 
@@ -223,7 +209,7 @@ export default function SuscripcionesPage() {
 
 
   if (!autorizado) {
-    return <p className="font-mono text-sm text-concrete-300">Verificando acceso...</p>;
+    return <p className="font-mono text-sm text-concrete-300">Verificando acceso…</p>;
   }
 
 
@@ -296,12 +282,6 @@ export default function SuscripcionesPage() {
           <tbody className={tableRowDivide}>
             {suscripciones.map((suscripcion) => {
               const pendiente = cancelandoId === suscripcion.id;
-              const confirmando = confirmandoId === suscripcion.id;
-              const actionLabel = pendiente
-                ? "..."
-                : confirmando
-                  ? "¿Seguro?"
-                  : "Cancelar";
 
 
               return (
@@ -323,15 +303,11 @@ export default function SuscripcionesPage() {
                     {suscripcion.estado === "ACTIVA" && (
                       <button
                         type="button"
-                        aria-label={actionLabel}
-                        onClick={() => {
-                          if (confirmando) void cancelar(suscripcion);
-                          else pedirCancelacion(suscripcion.id);
-                        }}
+                        onClick={() => setDialogo({ id: suscripcion.id })}
                         disabled={pendiente}
                         className={buttonDanger}
                       >
-                        {actionLabel}
+                        {pendiente ? "…" : "Cancelar"}
                       </button>
                     )}
                   </td>
@@ -396,7 +372,7 @@ export default function SuscripcionesPage() {
                       value: String(plan.id),
                       label: `${plan.nombre} — ${formatMoneda(plan.precio)} (${plan.duracionDias} días)`,
                     }))}
-                    placeholder={cargandoOpciones ? "Cargando planes..." : "Selecciona un plan activo"}
+                    placeholder={cargandoOpciones ? "Cargando planes…" : "Selecciona un plan activo"}
                     ariaLabel="Plan"
                   />
                 </div>
@@ -440,7 +416,7 @@ export default function SuscripcionesPage() {
                     Cancelar
                   </button>
                   <button type="submit" disabled={guardando || cargandoOpciones} className={`flex-1 ${buttonPrimary}`}>
-                    {guardando ? "Guardando..." : "Crear"}
+                    {guardando ? "Guardando…" : "Crear"}
                   </button>
                 </div>
               </form>
@@ -448,6 +424,19 @@ export default function SuscripcionesPage() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        abierto={dialogo !== null}
+        titulo="Cancelar suscripción"
+        mensaje={`¿Cancelar la suscripción de ${suscripciones.find((s) => s.id === dialogo?.id)?.nombreUsuario}?`}
+        textoConfirmar="Cancelar"
+        confirmando={dialogo !== null && cancelandoId === dialogo.id}
+        onCancelar={() => setDialogo(null)}
+        onConfirmar={() => {
+          const suscripcion = suscripciones.find((s) => s.id === dialogo?.id);
+          if (suscripcion) void cancelar(suscripcion);
+        }}
+      />
     </div>
   );
 }

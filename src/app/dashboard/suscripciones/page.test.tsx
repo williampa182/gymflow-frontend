@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent, within } from "@testing-library/react";
 import { ToastProvider } from "@/lib/toast";
 import { ToastHost } from "@/components/ToastHost";
 
@@ -213,9 +213,13 @@ describe("dashboard/suscripciones/page.tsx", () => {
       fireEvent.click(botonCancelar);
 
       expect(api.patch).not.toHaveBeenCalled();
-      expect(screen.getByRole("button", { name: "¿Seguro?" })).toBeInTheDocument();
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
 
-      fireEvent.click(screen.getByRole("button", { name: "¿Seguro?" }));
+      const dialogoCancelar = within(screen.getByRole("dialog")).getAllByRole(
+        "button",
+        { name: "Cancelar" }
+      )[1];
+      fireEvent.click(dialogoCancelar);
 
       await waitFor(() => {
         expect(api.patch).toHaveBeenCalledWith("/suscripciones/1/cancelar");
@@ -230,7 +234,11 @@ describe("dashboard/suscripciones/page.tsx", () => {
 
       const botonCancelar = await screen.findByRole("button", { name: "Cancelar" });
       fireEvent.click(botonCancelar);
-      fireEvent.click(screen.getByRole("button", { name: "¿Seguro?" }));
+      fireEvent.click(
+        within(screen.getByRole("dialog")).getAllByRole("button", {
+          name: "Cancelar",
+        })[1]
+      );
 
       await waitFor(() => {
         expect(screen.getByText("Suscripción cancelada.")).toBeInTheDocument();
@@ -309,6 +317,58 @@ describe("dashboard/suscripciones/page.tsx", () => {
         await screen.findByText("La fecha de fin debe ser igual o posterior a la fecha de inicio.")
       ).toBeInTheDocument();
       expect(api.post).not.toHaveBeenCalled();
+    });
+
+    it("filtra usuarios a solo CLIENTE al abrir modal de nueva suscripción", async () => {
+      const USUARIOS_MIX = [
+        {
+          id: 1,
+          nombre: "Admin",
+          email: "admin@test.com",
+          rol: "ADMIN" as const,
+          activo: true,
+          creadoEn: "2026-01-01",
+        },
+        {
+          id: 2,
+          nombre: "Entrenador",
+          email: "coach@test.com",
+          rol: "ENTRENADOR" as const,
+          activo: true,
+          creadoEn: "2026-01-01",
+        },
+        {
+          id: 3,
+          nombre: "Cliente",
+          email: "cliente@test.com",
+          rol: "CLIENTE" as const,
+          activo: true,
+          creadoEn: "2026-01-01",
+        },
+      ];
+
+      vi.mocked(api.get).mockImplementation((url, config) => {
+        if (url === "/suscripciones") return Promise.resolve(pageResponse(SUSCRIPCIONES_MOCK));
+        if (url === "/usuarios") {
+          const rolFiltro = (config as { params?: { rol?: string } } | undefined)?.params?.rol;
+          const usuarios =
+            rolFiltro === "CLIENTE"
+              ? USUARIOS_MIX.filter((usuario) => usuario.rol === "CLIENTE")
+              : USUARIOS_MIX;
+          return Promise.resolve(pageResponse(usuarios));
+        }
+        return Promise.resolve(pageResponse(PLANES_MOCK));
+      });
+
+      renderSuscripciones();
+      fireEvent.click(await screen.findByRole("button", { name: "+ Nueva suscripción" }));
+      fireEvent.click(await screen.findByRole("button", { name: "Usuario" }));
+
+      expect(screen.getAllByRole("option", { name: /Cliente/ })).toHaveLength(2);
+      expect(screen.queryByRole("option", { name: /Admin/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole("option", { name: /Entrenador/ })).not.toBeInTheDocument();
+
+      expect(api.get).toHaveBeenCalledWith("/usuarios", { params: { rol: "CLIENTE" } });
     });
   });
 

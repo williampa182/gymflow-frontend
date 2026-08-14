@@ -85,14 +85,34 @@ export default function RutinasPage() {
 
   // Asignación de rutina a cliente (por fila de rutina)
   const [clienteSeleccionado, setClienteSeleccionado] = useState<string>("");
+  const [asignandoId, setAsignandoId] = useState<number | null>(null);
+  const [guardandoAcompanId, setGuardandoAcompanId] = useState<number | null>(null);
 
   const modalRef = useFocusTrap(mostrarForm, cerrarForm);
+
+  useEffect(() => {
+    if (!mostrarForm) return;
+    if (!esFormDirty(form)) return;
+    const handler = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [mostrarForm, form]);
 
   function cerrarForm() {
     setMostrarForm(false);
     setEditandoId(null);
     setForm(formularioVacio());
     setFormErrors({});
+  }
+
+  function esFormDirty(form: RutinaRequestDTO): boolean {
+    if (form.nombre.trim() !== "") return true;
+    if ((form.descripcion ?? "").trim() !== "") return true;
+    if (form.ejercicios.length > 1) return true;
+    return form.ejercicios.some((e) => e.nombre.trim() !== "");
   }
 
   async function cargarDatos() {
@@ -109,13 +129,16 @@ export default function RutinasPage() {
       } else {
         const [rutinasRes, entrenadorRes, historialRes] = await Promise.all([
           api.get<RutinaResponseDTO[]>("/rutinas/mias"),
-          api.get<MiEntrenadorDTO>("/entrenador/mio").catch(() => null),
+          api
+            .get<MiEntrenadorDTO>("/entrenador/mio")
+            .then((res) => res.data || null)
+            .catch(() => null),
           api
             .get<HistorialAcompanamientoDTO[]>("/entrenador/mi-historial")
             .catch(() => null),
         ]);
         setMisRutinas(rutinasRes.data);
-        setMiEntrenador(entrenadorRes?.data ?? null);
+        setMiEntrenador(entrenadorRes);
         setHistorial(historialRes?.data ?? []);
       }
     } catch (err) {
@@ -136,7 +159,7 @@ export default function RutinasPage() {
   async function guardarRutina() {
     const errores: FormErrors = {};
     if (!form.nombre.trim()) errores.nombre = "El nombre es obligatorio";
-    if (form.ejercicios.length === 0) errores.ejercicios = "Agregá al menos un ejercicio";
+    if (form.ejercicios.length === 0) errores.ejercicios = "Agrega al menos un ejercicio";
     for (const ejercicio of form.ejercicios) {
       if (!ejercicio.nombre.trim()) {
         errores.ejercicios = "Todos los ejercicios necesitan nombre";
@@ -182,16 +205,25 @@ export default function RutinasPage() {
   }
 
   async function asignarRutina(rutinaId: number) {
+    if (asignandoId === rutinaId) return;
     if (!clienteSeleccionado) {
-      notificar("error", "Elegí un cliente para asignar");
+      notificar("error", "Elige un cliente para asignar");
       return;
     }
+    setAsignandoId(rutinaId);
     try {
       await api.post(`/rutinas/${rutinaId}/asignar/${clienteSeleccionado}`);
       notificar("exito", "Rutina asignada");
       setClienteSeleccionado("");
     } catch (err) {
-      notificar("error", mensajeDeError(err, "No se pudo asignar la rutina"));
+      notificar(
+        "error",
+        axios.isAxiosError(err) && err.response?.status === 409
+          ? "Este cliente ya tiene esa rutina asignada"
+          : mensajeDeError(err, "No se pudo asignar la rutina")
+      );
+    } finally {
+      setAsignandoId(null);
     }
   }
 
@@ -206,12 +238,21 @@ export default function RutinasPage() {
   }
 
   async function acompañar(clienteId: number) {
+    if (guardandoAcompanId === clienteId) return;
+    setGuardandoAcompanId(clienteId);
     try {
       await api.post(`/entrenador/asignarme/${clienteId}`);
-      notificar("exito", "Ahora acompañás a este cliente");
-      cargarDatos();
+      notificar("exito", "Ahora acompañas a este cliente");
+      await cargarDatos();
     } catch (err) {
-      notificar("error", mensajeDeError(err, "No se pudo asignar el acompañamiento"));
+      notificar(
+        "error",
+        axios.isAxiosError(err) && err.response?.status === 409
+          ? "Ya estás acompañando a este cliente"
+          : mensajeDeError(err, "No se pudo asignar el acompañamiento")
+      );
+    } finally {
+      setGuardandoAcompanId(null);
     }
   }
 
@@ -247,7 +288,7 @@ export default function RutinasPage() {
         titulo="Mis rutinas"
         subtitulo={
           esEntrenador
-            ? "Creá rutinas y asignalas a tus clientes acompañados"
+            ? "Crea rutinas y asígnalas a tus clientes acompañados"
             : "El entrenamiento que tu acompañante te preparó"
         }
         acciones={
@@ -303,7 +344,7 @@ export default function RutinasPage() {
                           <td className={tableCellMuted}>
                             {cliente.yaAcompaño ? (
                               <span className="inline-flex rounded-sm bg-moss-600/15 px-2 py-0.5 font-mono text-xs text-moss-400">
-                                Acompañado por vos
+                                Acompañado por ti
                               </span>
                             ) : (
                               <span className="font-mono text-xs text-concrete-300">
@@ -322,9 +363,10 @@ export default function RutinasPage() {
                             ) : (
                               <button
                                 onClick={() => acompañar(cliente.id)}
+                                disabled={guardandoAcompanId === cliente.id}
                                 className={`text-xs ${buttonPrimary}`}
                               >
-                                Acompañar
+                                {guardandoAcompanId === cliente.id ? "Acompañando…" : "Acompañar"}
                               </button>
                             )}
                           </td>
@@ -466,7 +508,7 @@ export default function RutinasPage() {
                             <option value="">
                               {asignables.length === 0
                                 ? "Sin clientes acompañados"
-                                : "Elegí un cliente"}
+                                : "Elige un cliente"}
                             </option>
                             {asignables.map((cliente) => (
                               <option key={cliente.id} value={cliente.id}>
@@ -476,10 +518,10 @@ export default function RutinasPage() {
                           </select>
                           <button
                             onClick={() => asignarRutina(rutina.id)}
-                            disabled={asignables.length === 0}
+                            disabled={asignables.length === 0 || asignandoId === rutina.id}
                             className={`text-xs ${buttonPrimary}`}
                           >
-                            Asignar
+                            {asignandoId === rutina.id ? "Asignando…" : "Asignar"}
                           </button>
                         </div>
                       )}
@@ -537,7 +579,7 @@ export default function RutinasPage() {
                 </div>
               </div>
             ) : (
-              <EmptyState mensaje="Todavía no tenés un entrenador asignado" />
+              <EmptyState mensaje="Todavía no tienes un entrenador asignado" />
             )}
           </section>
 
@@ -552,7 +594,7 @@ export default function RutinasPage() {
               </p>
             </div>
             {historial.length === 0 ? (
-              <EmptyState mensaje="Todavía no tenés acompañamientos anteriores" />
+              <EmptyState mensaje="Todavía no tienes acompañamientos anteriores" />
             ) : (
               <table className="w-full text-left">
                 <thead className={tableHead}>
@@ -763,7 +805,17 @@ export default function RutinasPage() {
               </div>
 
               <div className="flex justify-end gap-2 border-t border-ink-700 px-6 py-4">
-                <button type="button" onClick={cerrarForm} className={buttonSecondaryDark}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (esFormDirty(form)) {
+                      const ok = window.confirm("Tienes cambios sin guardar. ¿Cerrar sin guardar?");
+                      if (!ok) return;
+                    }
+                    cerrarForm();
+                  }}
+                  className={buttonSecondaryDark}
+                >
                   Cancelar
                 </button>
                 <button type="submit" disabled={guardando} className={buttonPrimary}>

@@ -68,7 +68,7 @@ describe("fase 4: vista del ENTRENADOR", () => {
       expect(screen.getByText("Full Body")).toBeInTheDocument();
     });
     expect(screen.getByText("Cliente Beto")).toBeInTheDocument();
-    expect(screen.getByText("Acompañado por vos")).toBeInTheDocument();
+    expect(screen.getByText("Acompañado por ti")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "+ Nueva rutina" })).toBeInTheDocument();
     expect(api.get).toHaveBeenCalledWith("/rutinas");
     expect(api.get).toHaveBeenCalledWith("/entrenador/clientes-elegibles");
@@ -162,6 +162,184 @@ describe("fase 4: vista del ENTRENADOR", () => {
     await waitFor(() => {
       expect(api.post).toHaveBeenCalledWith("/rutinas/10/asignar/3");
     });
+  });
+
+  it("bloquea el segundo submit mientras el primero está en vuelo", async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({ data: [rutinaMock] });
+    vi.mocked(api.get).mockResolvedValueOnce({ data: clientesMock });
+    vi.mocked(api.post).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          setTimeout(() => resolve({ data: {} }), 50);
+        })
+    );
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText("Full Body")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText("Asignar a:"), {
+      target: { value: "3" },
+    });
+    const botonAsignar = screen.getByRole("button", { name: "Asignar" });
+    fireEvent.click(botonAsignar);
+    fireEvent.click(botonAsignar);
+
+    expect(
+      screen.getByRole("button", { name: /Asignando/ })
+    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Rutina asignada")).toHaveLength(1);
+    });
+    expect(api.post).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText(/ya tiene esa rutina asignada/)).not.toBeInTheDocument();
+  });
+
+  it("muestra feedback inmediato y deshabilita el botón mientras acompaña", async () => {
+    const clientesConBetoAcompanado = [
+      { id: 2, nombre: "Cliente Beto", yaAcompaño: true, asignacionId: 9 },
+    ];
+    vi.mocked(api.get).mockResolvedValueOnce({ data: [] });
+    vi.mocked(api.get).mockResolvedValueOnce({ data: clientesMock });
+    vi.mocked(api.get).mockResolvedValueOnce({ data: [] });
+    vi.mocked(api.get).mockResolvedValueOnce({ data: clientesConBetoAcompanado });
+    vi.mocked(api.post).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          setTimeout(() => resolve({ data: {} }), 50);
+        })
+    );
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText("Cliente Beto")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Acompañar" }));
+
+    expect(screen.getByRole("button", { name: /Acompañando/ })).toBeDisabled();
+
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith("/entrenador/asignarme/2");
+    });
+    expect(
+      await screen.findByText("Ahora acompañas a este cliente")
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("Ahora acompañas a este cliente")).toHaveLength(1);
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: "Cancelar acompañamiento" })
+      ).toBeInTheDocument();
+    });
+    expect(screen.queryByText("Sin acompañante")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Acompañando/ })).not.toBeInTheDocument();
+  });
+
+  it("bloquea el segundo click en Acompañar mientras el primero está en vuelo", async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({ data: [] });
+    vi.mocked(api.get).mockResolvedValueOnce({ data: clientesMock });
+    vi.mocked(api.get).mockResolvedValue({ data: [] });
+    vi.mocked(api.post).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          setTimeout(() => resolve({ data: {} }), 50);
+        })
+    );
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText("Cliente Beto")).toBeInTheDocument();
+    });
+
+    const botonAcompanar = screen.getByRole("button", { name: "Acompañar" });
+    fireEvent.click(botonAcompanar);
+    fireEvent.click(botonAcompanar);
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Ahora acompañas a este cliente")).toHaveLength(1);
+    });
+    expect(api.post).toHaveBeenCalledTimes(1);
+    expect(
+      screen.queryByText(/Ya estás acompañando a este cliente/)
+    ).not.toBeInTheDocument();
+  });
+
+  it("advierte antes de descartar cambios si el modal está dirty", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    vi.mocked(api.get).mockResolvedValueOnce({ data: [] });
+    vi.mocked(api.get).mockResolvedValueOnce({ data: [] });
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "+ Nueva rutina" })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "+ Nueva rutina" }));
+    fireEvent.change(screen.getByLabelText("Nombre"), {
+      target: { value: "Test Rutina" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+
+    expect(window.confirm).toHaveBeenCalledTimes(1);
+    expect(window.confirm).toHaveBeenCalledWith(
+      "Tienes cambios sin guardar. ¿Cerrar sin guardar?"
+    );
+    expect(screen.queryByText("Nueva rutina")).not.toBeInTheDocument();
+    vi.restoreAllMocks();
+  });
+
+  it("no pregunta si el modal está limpio", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    vi.mocked(api.get).mockResolvedValueOnce({ data: [] });
+    vi.mocked(api.get).mockResolvedValueOnce({ data: [] });
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "+ Nueva rutina" })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "+ Nueva rutina" }));
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+
+    expect(window.confirm).not.toHaveBeenCalled();
+    expect(screen.queryByText("Nueva rutina")).not.toBeInTheDocument();
+    vi.restoreAllMocks();
+  });
+
+  it("beforeunload previene la salida cuando el modal está dirty", async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({ data: [] });
+    vi.mocked(api.get).mockResolvedValueOnce({ data: [] });
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "+ Nueva rutina" })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "+ Nueva rutina" }));
+    fireEvent.change(screen.getByLabelText("Nombre"), {
+      target: { value: "Test Rutina" },
+    });
+
+    const eventoSalida = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(eventoSalida);
+    expect(eventoSalida.defaultPrevented).toBe(true);
+
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+    vi.restoreAllMocks();
+
+    const eventoSalida2 = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(eventoSalida2);
+    expect(eventoSalida2.defaultPrevented).toBe(false);
   });
 
   it("desactiva una rutina con confirmación: DELETE /rutinas/{id}", async () => {
@@ -275,16 +453,13 @@ describe("fase 4: vista del CLIENTE", () => {
 
   it("sin acompañante ni rutinas muestra los estados vacíos", async () => {
     vi.mocked(api.get).mockResolvedValueOnce({ data: [] });
-    vi.mocked(api.get).mockRejectedValueOnce({
-      isAxiosError: true,
-      response: { status: 404 },
-    });
+    vi.mocked(api.get).mockResolvedValueOnce({ data: null });
     vi.mocked(api.get).mockResolvedValueOnce({ data: [] });
 
     renderPage();
 
     expect(
-      await screen.findByText("Todavía no tenés un entrenador asignado")
+      await screen.findByText("Todavía no tienes un entrenador asignado")
     ).toBeInTheDocument();
     expect(
       screen.getByText("Tu entrenador todavía no te asignó rutinas")

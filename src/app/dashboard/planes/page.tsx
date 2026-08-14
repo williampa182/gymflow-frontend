@@ -1,12 +1,13 @@
 "use client";
 
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import axios from "axios";
 import api from "@/lib/api";
 import { getRol } from "@/lib/auth";
 import type { PlanRequestDTO, PlanResponseDTO, Rol, SuscripcionResponseDTO, TipoPlan } from "@/types";
 import { Select } from "@/components/Select";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { EmptyState } from "@/components/EmptyState";
 import { PageHeader } from "@/components/PageHeader";
 import { SkeletonFilas } from "@/components/Skeleton";
@@ -80,8 +81,7 @@ export default function PlanesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cambiandoId, setCambiandoId] = useState<number | null>(null);
-  const [confirmandoId, setConfirmandoId] = useState<number | null>(null);
-  const confirmarTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [dialogo, setDialogo] = useState<{ id: number } | null>(null);
 
 
   const [mostrarForm, setMostrarForm] = useState(false);
@@ -100,13 +100,6 @@ export default function PlanesPage() {
 
 
   const modalRef = useFocusTrap(mostrarForm, cerrarForm);
-
-
-  useEffect(() => {
-    return () => {
-      if (confirmarTimeoutRef.current) clearTimeout(confirmarTimeoutRef.current);
-    };
-  }, []);
 
 
   async function cargarPlanes() {
@@ -211,26 +204,13 @@ export default function PlanesPage() {
       console.error(err);
     } finally {
       setCambiandoId(null);
-      setConfirmandoId(null);
+      setDialogo(null);
     }
-  }
-
-
-  function pedirCambioEstado(plan: PlanResponseDTO) {
-    if (!plan.activo) {
-      void cambiarEstado(plan);
-      return;
-    }
-
-
-    setConfirmandoId(plan.id);
-    if (confirmarTimeoutRef.current) clearTimeout(confirmarTimeoutRef.current);
-    confirmarTimeoutRef.current = setTimeout(() => setConfirmandoId(null), 4000);
   }
 
 
   if (!autorizado) {
-    return <p className="font-mono text-sm text-concrete-300">Verificando acceso...</p>;
+    return <p className="font-mono text-sm text-concrete-300">Verificando acceso…</p>;
   }
 
 
@@ -280,14 +260,6 @@ export default function PlanesPage() {
           <tbody className={tableRowDivide}>
             {planes.map((plan) => {
               const pendiente = cambiandoId === plan.id;
-              const confirmando = confirmandoId === plan.id;
-              const actionLabel = pendiente
-                ? "..."
-                : confirmando
-                  ? "¿Seguro?"
-                  : plan.activo
-                    ? "Desactivar"
-                    : "Activar";
 
 
               return (
@@ -315,7 +287,7 @@ export default function PlanesPage() {
                       onClick={() => void cambiarEstado(plan)}
                       className={buttonSecondaryDark}
                     >
-                      {pendiente ? "..." : plan.activo ? "Activo" : "Inactivo"}
+                      {pendiente ? "…" : plan.activo ? "Activo" : "Inactivo"}
                     </button>
                   </td>
                   <td className="px-4 py-3">
@@ -330,15 +302,11 @@ export default function PlanesPage() {
                       {plan.activo && (
                         <button
                           type="button"
-                          aria-label={actionLabel}
                           disabled={pendiente}
-                          onClick={() => {
-                            if (confirmando) void cambiarEstado(plan);
-                            else pedirCambioEstado(plan);
-                          }}
+                          onClick={() => setDialogo({ id: plan.id })}
                           className={buttonDanger}
                         >
-                          {actionLabel}
+                          {pendiente ? "…" : "Desactivar"}
                         </button>
                       )}
                     </div>
@@ -518,7 +486,7 @@ export default function PlanesPage() {
                     Cancelar
                   </button>
                   <button type="submit" disabled={guardando} className={`flex-1 ${buttonPrimary}`}>
-                    {guardando ? "Guardando..." : "Guardar"}
+                    {guardando ? "Guardando…" : "Guardar"}
                   </button>
                 </div>
               </form>
@@ -526,6 +494,19 @@ export default function PlanesPage() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        abierto={dialogo !== null}
+        titulo="Desactivar plan"
+        mensaje={`¿Desactivar el plan "${planes.find((p) => p.id === dialogo?.id)?.nombre}"?`}
+        textoConfirmar="Desactivar"
+        confirmando={dialogo !== null && cambiandoId === dialogo.id}
+        onCancelar={() => setDialogo(null)}
+        onConfirmar={() => {
+          const plan = planes.find((p) => p.id === dialogo?.id);
+          if (plan) void cambiarEstado(plan);
+        }}
+      />
     </div>
   );
 }
@@ -725,7 +706,7 @@ function PlanesDisponiblesView({
                   className={`flex-1 ${buttonPrimary}`}
                 >
                   {guardando
-                    ? "Procesando..."
+                    ? "Procesando…"
                     : `Pagar ${formatMoneda(inscribiendoPlan.precio)} (demo)`}
                 </button>
               </div>

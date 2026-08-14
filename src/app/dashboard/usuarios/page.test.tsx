@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ToastProvider } from "@/lib/toast";
 import { ToastHost } from "@/components/ToastHost";
@@ -174,9 +174,11 @@ describe("dashboard/usuarios/page.tsx", () => {
     await user.click(screen.getByRole("button", { name: "Cambiar rol" }));
 
     expect(api.patch).not.toHaveBeenCalled();
-    expect(screen.getByRole("button", { name: "Confirmar cambio" })).toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Confirmar cambio" }));
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", { name: "Cambiar rol" })
+    );
 
     await waitFor(() => {
       expect(api.patch).toHaveBeenCalledWith("/usuarios/1/rol", {
@@ -203,7 +205,9 @@ describe("dashboard/usuarios/page.tsx", () => {
       "ENTRENADOR"
     );
     await user.click(screen.getByRole("button", { name: "Cambiar rol" }));
-    await user.click(screen.getByRole("button", { name: "Confirmar cambio" }));
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", { name: "Cambiar rol" })
+    );
 
     await waitFor(() => {
       expect(
@@ -231,11 +235,11 @@ describe("dashboard/usuarios/page.tsx", () => {
     await user.click(screen.getAllByRole("button", { name: "Eliminar" })[0]);
 
     expect(api.delete).not.toHaveBeenCalled();
-    expect(
-      screen.getAllByRole("button", { name: "¿Eliminar? Sí" })
-    ).toHaveLength(1);
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "¿Eliminar? Sí" }));
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", { name: "Eliminar" })
+    );
 
     await waitFor(() => {
       expect(api.delete).toHaveBeenCalledWith("/usuarios/1");
@@ -257,7 +261,9 @@ describe("dashboard/usuarios/page.tsx", () => {
     });
 
     await user.click(screen.getAllByRole("button", { name: "Eliminar" })[0]);
-    await user.click(screen.getByRole("button", { name: "¿Eliminar? Sí" }));
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", { name: "Eliminar" })
+    );
 
     await waitFor(() => {
       expect(

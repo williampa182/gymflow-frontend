@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent, within } from "@testing-library/react";
 import { ToastProvider } from "@/lib/toast";
 import { ToastHost } from "@/components/ToastHost";
 
@@ -170,7 +170,7 @@ describe("dashboard/planes/page.tsx", () => {
   });
 
   describe("acciones de admin", () => {
-    it("deshabilita el toggle mientras corre el PATCH y evita el doble disparo", async () => {
+    it("deshabilita el botón mientras corre el PATCH y evita el doble disparo", async () => {
       vi.mocked(api.get).mockResolvedValue(pageResponse(plansMock));
       // PATCH que nunca resuelve: el botón queda en estado pendiente.
       vi.mocked(api.patch).mockReturnValue(new Promise(() => {}));
@@ -180,10 +180,12 @@ describe("dashboard/planes/page.tsx", () => {
       const botones = await screen.findAllByRole("button", { name: "Desactivar" });
       const boton = botones[0];
       fireEvent.click(boton);
-      fireEvent.click(screen.getByRole("button", { name: "¿Seguro?" }));
+      fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Desactivar" }));
 
       expect(api.patch).toHaveBeenCalledTimes(1);
-      expect(screen.getByRole("button", { name: "..." })).toBeDisabled();
+      expect(
+        within(screen.getByRole("dialog")).getByRole("button", { name: "…" })
+      ).toBeDisabled();
     });
 
     it("avisa con un toast cuando se desactiva un plan", async () => {
@@ -194,7 +196,7 @@ describe("dashboard/planes/page.tsx", () => {
 
       const botones = await screen.findAllByRole("button", { name: "Desactivar" });
       fireEvent.click(botones[0]);
-      fireEvent.click(screen.getByRole("button", { name: "¿Seguro?" }));
+      fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Desactivar" }));
 
       await waitFor(() => {
         expect(screen.getByText("Plan desactivado.")).toBeInTheDocument();
@@ -211,9 +213,9 @@ describe("dashboard/planes/page.tsx", () => {
       fireEvent.click(boton[0]);
 
       expect(api.patch).not.toHaveBeenCalled();
-      expect(screen.getByRole("button", { name: "¿Seguro?" })).toBeInTheDocument();
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
 
-      fireEvent.click(screen.getByRole("button", { name: "¿Seguro?" }));
+      fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Desactivar" }));
 
       await waitFor(() => expect(api.patch).toHaveBeenCalledTimes(1));
     });

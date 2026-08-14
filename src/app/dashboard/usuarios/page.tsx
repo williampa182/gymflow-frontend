@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { Rol, UsuarioResponseDTO } from "@/types";
 import { Select } from "@/components/Select";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useToast } from "@/lib/toast";
 import { useRequireRole } from "@/lib/useRequireRole";
 import { usePageTitle } from "@/lib/usePageTitle";
@@ -24,6 +25,11 @@ import {
 
 const ROLES: Rol[] = ["ADMIN", "ENTRENADOR", "CLIENTE"];
 
+type DialogoConfirmacion =
+  | { tipo: "desactivar"; id: number }
+  | { tipo: "rol"; id: number }
+  | { tipo: "eliminar"; id: number };
+
 export default function UsuariosPage() {
   usePageTitle("Usuarios");
   const { notificar } = useToast();
@@ -34,62 +40,21 @@ export default function UsuariosPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cambiandoId, setCambiandoId] = useState<number | null>(null);
-  const [confirmandoId, setConfirmandoId] = useState<number | null>(null);
   const [eliminandoId, setEliminandoId] = useState<number | null>(null);
-  const [confirmandoEliminacionId, setConfirmandoEliminacionId] = useState<number | null>(null);
   const [rolPendiente, setRolPendiente] = useState<{
     id: number;
     rol: Rol;
   } | null>(null);
-  const [confirmandoRolId, setConfirmandoRolId] = useState<number | null>(null);
   const [cambiandoRolId, setCambiandoRolId] = useState<number | null>(null);
-  const confirmarTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const confirmarRolTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const confirmarEliminacionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // El timeout evita que el botón quede pegado en "¿Seguro?" para siempre.
-  useEffect(() => {
-    return () => {
-      if (confirmarTimeoutRef.current) clearTimeout(confirmarTimeoutRef.current);
-      if (confirmarRolTimeoutRef.current) {
-        clearTimeout(confirmarRolTimeoutRef.current);
-      }
-      if (confirmarEliminacionTimeoutRef.current) {
-        clearTimeout(confirmarEliminacionTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  function pedirConfirmacion(id: number) {
-    setConfirmandoId(id);
-    if (confirmarTimeoutRef.current) clearTimeout(confirmarTimeoutRef.current);
-    confirmarTimeoutRef.current = setTimeout(() => setConfirmandoId(null), 4000);
-  }
+  const [dialogo, setDialogo] = useState<DialogoConfirmacion | null>(null);
 
   function seleccionarRol(id: number, rol: Rol) {
     const usuario = usuarios.find((u) => u.id === id);
     if (!usuario || usuario.rol === rol) {
       setRolPendiente(null);
-      setConfirmandoRolId(null);
       return;
     }
     setRolPendiente({ id, rol });
-    setConfirmandoRolId(null);
-    if (confirmarRolTimeoutRef.current) {
-      clearTimeout(confirmarRolTimeoutRef.current);
-      confirmarRolTimeoutRef.current = null;
-    }
-  }
-
-  function pedirConfirmacionRol(id: number) {
-    setConfirmandoRolId(id);
-    if (confirmarRolTimeoutRef.current) {
-      clearTimeout(confirmarRolTimeoutRef.current);
-    }
-    confirmarRolTimeoutRef.current = setTimeout(
-      () => setConfirmandoRolId(null),
-      4000
-    );
   }
 
   async function cargarUsuarios() {
@@ -127,7 +92,7 @@ export default function UsuariosPage() {
       setError("No se pudo cambiar el estado del usuario.");
     } finally {
       setCambiandoId(null);
-      setConfirmandoId(null);
+      setDialogo(null);
     }
   }
 
@@ -141,7 +106,6 @@ export default function UsuariosPage() {
       await api.patch(`/usuarios/${usuario.id}/rol`, { rol: cambio });
       notificar("exito", "Rol actualizado");
       setRolPendiente(null);
-      setConfirmandoRolId(null);
       await cargarUsuarios();
     } catch (err) {
       console.error(err);
@@ -150,7 +114,7 @@ export default function UsuariosPage() {
       notificar("error", mensaje);
     } finally {
       setCambiandoRolId(null);
-      setConfirmandoRolId(null);
+      setDialogo(null);
     }
   }
 
@@ -168,23 +132,12 @@ export default function UsuariosPage() {
       notificar("error", mensaje);
     } finally {
       setEliminandoId(null);
-      setConfirmandoEliminacionId(null);
+      setDialogo(null);
     }
-  }
-
-  function pedirConfirmacionEliminacion(id: number) {
-    setConfirmandoEliminacionId(id);
-    if (confirmarEliminacionTimeoutRef.current) {
-      clearTimeout(confirmarEliminacionTimeoutRef.current);
-    }
-    confirmarEliminacionTimeoutRef.current = setTimeout(
-      () => setConfirmandoEliminacionId(null),
-      4000
-    );
   }
 
   if (!autorizado) {
-    return <p className="font-mono text-sm text-concrete-300">Verificando acceso...</p>;
+    return <p className="font-mono text-sm text-concrete-300">Verificando acceso…</p>;
   }
 
   return (
@@ -245,44 +198,25 @@ export default function UsuariosPage() {
                     {formatFecha(u.creadoEn)}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <div className="flex flex-wrap justify-end gap-2">
+<div className="flex flex-wrap justify-end gap-2">
                       {rolPendiente?.id === u.id && rolPendiente.rol !== u.rol && (
                         <button
                           type="button"
-                          onClick={() =>
-                            confirmandoRolId === u.id
-                              ? cambiarRol(u)
-                              : pedirConfirmacionRol(u.id)
-                          }
+                          onClick={() => setDialogo({ tipo: "rol", id: u.id })}
                           disabled={cambiandoRolId === u.id}
                           className={buttonDanger}
                         >
-                          {cambiandoRolId === u.id
-                            ? "..."
-                            : confirmandoRolId === u.id
-                            ? "Confirmar cambio"
-                            : "Cambiar rol"}
+                          {cambiandoRolId === u.id ? "…" : "Cambiar rol"}
                         </button>
                       )}
                       {u.activo ? (
                         <button
-                          onClick={() =>
-                            confirmandoId === u.id
-                              ? cambiarEstado(u)
-                              : pedirConfirmacion(u.id)
-                          }
+                          type="button"
+                          onClick={() => setDialogo({ tipo: "desactivar", id: u.id })}
                           disabled={cambiandoId === u.id}
-                          className={
-                            confirmandoId === u.id
-                              ? "rounded-md bg-rust-600 px-3 py-1 text-xs font-medium text-concrete-50 transition hover:bg-rust-700 disabled:cursor-not-allowed disabled:opacity-50"
-                              : buttonDanger
-                          }
+                          className={buttonDanger}
                         >
-                          {cambiandoId === u.id
-                            ? "..."
-                            : confirmandoId === u.id
-                            ? "¿Seguro?"
-                            : "Desactivar"}
+                          {cambiandoId === u.id ? "…" : "Desactivar"}
                         </button>
                       ) : (
                         <button
@@ -290,28 +224,16 @@ export default function UsuariosPage() {
                           disabled={cambiandoId === u.id}
 className={buttonSecondaryDark}
                         >
-                          {cambiandoId === u.id ? "..." : "Activar"}
+                          {cambiandoId === u.id ? "…" : "Activar"}
                         </button>
                       )}
                       <button
                         type="button"
-                        onClick={() =>
-                          confirmandoEliminacionId === u.id
-                            ? eliminarUsuario(u)
-                            : pedirConfirmacionEliminacion(u.id)
-                        }
+                        onClick={() => setDialogo({ tipo: "eliminar", id: u.id })}
                         disabled={eliminandoId === u.id}
-                        className={
-                          confirmandoEliminacionId === u.id
-                            ? "rounded-md bg-rust-600 px-3 py-1 text-xs font-medium text-concrete-50 transition hover:bg-rust-700 disabled:cursor-not-allowed disabled:opacity-50"
-                            : "rounded-md border border-rust-700/60 px-3 py-1 text-xs font-medium text-rust-400 transition hover:bg-rust-900/30 disabled:cursor-not-allowed disabled:opacity-50"
-                        }
+                        className="rounded-md border border-rust-700/60 px-3 py-1 text-xs font-medium text-rust-400 transition hover:bg-rust-900/30 disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        {eliminandoId === u.id
-                          ? "..."
-                          : confirmandoEliminacionId === u.id
-                          ? "¿Eliminar? Sí"
-                          : "Eliminar"}
+                        {eliminandoId === u.id ? "…" : "Eliminar"}
                       </button>
                     </div>
                   </td>
@@ -328,6 +250,51 @@ className={buttonSecondaryDark}
           )}
         </div>
       )}
+
+      {dialogo && (() => {
+        const usuario = usuarios.find((u) => u.id === dialogo.id);
+        if (!usuario) return null;
+
+        if (dialogo.tipo === "desactivar") {
+          return (
+            <ConfirmDialog
+              abierto
+              titulo="Desactivar usuario"
+              mensaje={`¿Desactivar a ${usuario.nombre}?`}
+              textoConfirmar="Desactivar"
+              confirmando={cambiandoId === usuario.id}
+              onCancelar={() => setDialogo(null)}
+              onConfirmar={() => void cambiarEstado(usuario)}
+            />
+          );
+        }
+
+        if (dialogo.tipo === "rol") {
+          return (
+            <ConfirmDialog
+              abierto
+              titulo="Cambiar rol"
+              mensaje={`¿Cambiar el rol de ${usuario.nombre} a ${rolPendiente?.rol}?`}
+              textoConfirmar="Cambiar rol"
+              confirmando={cambiandoRolId === usuario.id}
+              onCancelar={() => setDialogo(null)}
+              onConfirmar={() => void cambiarRol(usuario)}
+            />
+          );
+        }
+
+        return (
+          <ConfirmDialog
+            abierto
+            titulo="Eliminar usuario"
+            mensaje={`¿Eliminar a ${usuario.nombre}? Esta acción no se puede deshacer.`}
+            textoConfirmar="Eliminar"
+            confirmando={eliminandoId === usuario.id}
+            onCancelar={() => setDialogo(null)}
+            onConfirmar={() => void eliminarUsuario(usuario)}
+          />
+        );
+      })()}
     </div>
   );
 }
