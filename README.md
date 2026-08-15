@@ -68,7 +68,7 @@ Requisitos: Node.js 20+, y el backend de GymFlow corriendo (ver
 npm install
 
 # Copiar y ajustar las variables de entorno
-cp .env.example .env
+cp .env.example .env.local
 
 # Correr en modo desarrollo
 npm run dev
