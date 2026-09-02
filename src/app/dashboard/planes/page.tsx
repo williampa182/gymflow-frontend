@@ -560,7 +560,7 @@ function PlanesDisponiblesView({
       // Pago mock (demo de portafolio): no hay pasarela real; el POST
       // simula la aprobación y el backend activa la membresía.
       await api.post("/suscripciones/mi", { planId: inscribiendoPlan.id });
-      notificar("exito", `¡Listo! Ya sos miembro de ${inscribiendoPlan.nombre}.`);
+      notificar("exito", `¡Listo! Plan activo: ${inscribiendoPlan.nombre}.`);
       setYaInscripto(true);
       setInscribiendoPlan(null);
     } catch (err) {
@@ -619,7 +619,12 @@ function PlanesDisponiblesView({
                 {esCliente &&
                   (yaInscripto ? (
                     <td className="px-4 py-3">
-                      <span className={badgeEstado("moss", "dark")}>Ya sos miembro</span>
+                      <span
+                        className={badgeEstado("moss", "dark")}
+                        aria-label="Plan activo — solo podés tener una suscripción activa a la vez"
+                      >
+                        Plan activo
+                     </span>
                     </td>
                   ) : (
                     <td className="px-4 py-3">

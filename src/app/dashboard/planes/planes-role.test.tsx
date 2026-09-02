@@ -142,7 +142,7 @@ describe("fase 3: auto-suscripción del CLIENTE", () => {
     });
 
     expect(screen.getAllByRole("button", { name: "Inscribirme" })).toHaveLength(2);
-    expect(screen.queryByText("Ya sos miembro")).not.toBeInTheDocument();
+    expect(screen.queryByText("Plan activo")).not.toBeInTheDocument();
   });
 
   it("CLIENTE que ya es miembro ve el badge y no el botón", async () => {
@@ -166,7 +166,7 @@ describe("fase 3: auto-suscripción del CLIENTE", () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getAllByText("Ya sos miembro")).toHaveLength(2);
+      expect(screen.getAllByText("Plan activo")).toHaveLength(2);
     });
     expect(screen.queryByRole("button", { name: "Inscribirme" })).not.toBeInTheDocument();
   });
@@ -196,10 +196,10 @@ describe("fase 3: auto-suscripción del CLIENTE", () => {
       expect(api.post).toHaveBeenCalledWith("/suscripciones/mi", { planId: 1 });
     });
     expect(
-      await screen.findByText("¡Listo! Ya sos miembro de Plan Mensual Básico.")
+      await screen.findByText("¡Listo! Plan activo: Plan Mensual Básico.")
     ).toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(screen.getAllByText("Ya sos miembro")).toHaveLength(2);
+    expect(screen.getAllByText("Plan activo")).toHaveLength(2);
   });
 
   it("409 del backend (ya es miembro) muestra toast de error y el badge", async () => {
@@ -226,7 +226,7 @@ describe("fase 3: auto-suscripción del CLIENTE", () => {
       await screen.findByText("El usuario ya tiene una suscripción activa")
     ).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getAllByText("Ya sos miembro")).toHaveLength(2);
+      expect(screen.getAllByText("Plan activo")).toHaveLength(2);
     });
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
