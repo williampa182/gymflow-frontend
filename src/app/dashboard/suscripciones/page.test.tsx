@@ -269,6 +269,9 @@ describe("dashboard/suscripciones/page.tsx", () => {
 
       renderSuscripciones();
       fireEvent.click(await screen.findByRole("button", { name: "+ Nueva suscripción" }));
+      await waitFor(() => {
+        expect(api.get).toHaveBeenCalledWith("/usuarios", { params: { rol: "CLIENTE" } });
+      });
       fireEvent.click(await screen.findByRole("button", { name: "Crear" }));
 
       expect(await screen.findByText("Selecciona un usuario y un plan activo.")).toBeInTheDocument();
@@ -285,12 +288,37 @@ describe("dashboard/suscripciones/page.tsx", () => {
       renderSuscripciones();
       fireEvent.click(await screen.findByRole("button", { name: "+ Nueva suscripción" }));
 
+      // D1-B: la carga inicial va con debounce (300ms); esperar el fetch.
+      await waitFor(() => {
+        expect(api.get).toHaveBeenCalledWith("/usuarios", { params: { rol: "CLIENTE" } });
+      });
       expect(await screen.findByRole("button", { name: "Usuario" })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Plan" })).toBeInTheDocument();
 
       fireEvent.click(screen.getByRole("button", { name: "Plan" }));
       expect(screen.getAllByRole("option", { name: /Plan Mensual Básico/ })).toHaveLength(2);
       expect(screen.queryByRole("option", { name: /Plan Inactivo/ })).not.toBeInTheDocument();
+    });
+
+    it("busca socios por texto (D1-B) pasando q al backend", async () => {
+      vi.mocked(api.get).mockImplementation((url) => {
+        if (url === "/suscripciones") return Promise.resolve(pageResponse(SUSCRIPCIONES_MOCK));
+        if (url === "/usuarios") return Promise.resolve(pageResponse(USUARIOS_MOCK));
+        return Promise.resolve(pageResponse([]));
+      });
+
+      renderSuscripciones();
+      fireEvent.click(await screen.findByRole("button", { name: "+ Nueva suscripción" }));
+
+      fireEvent.change(screen.getByLabelText("Buscar socio por nombre o correo"), {
+        target: { value: "rosa" },
+      });
+
+      await waitFor(() => {
+        expect(api.get).toHaveBeenCalledWith("/usuarios", {
+          params: { rol: "CLIENTE", q: "rosa" },
+        });
+      });
     });
 
     it("rechaza una fecha de fin anterior a la fecha de inicio", async () => {
@@ -303,6 +331,9 @@ describe("dashboard/suscripciones/page.tsx", () => {
 
       renderSuscripciones();
       fireEvent.click(await screen.findByRole("button", { name: "+ Nueva suscripción" }));
+      await waitFor(() => {
+        expect(api.get).toHaveBeenCalledWith("/usuarios", { params: { rol: "CLIENTE" } });
+      });
 
       fireEvent.click(await screen.findByRole("button", { name: "Usuario" }));
       const usuarioOptions = screen.getAllByRole("option", { name: /Ana García/ });
@@ -362,6 +393,9 @@ describe("dashboard/suscripciones/page.tsx", () => {
 
       renderSuscripciones();
       fireEvent.click(await screen.findByRole("button", { name: "+ Nueva suscripción" }));
+      await waitFor(() => {
+        expect(api.get).toHaveBeenCalledWith("/usuarios", { params: { rol: "CLIENTE" } });
+      });
       fireEvent.click(await screen.findByRole("button", { name: "Usuario" }));
 
       expect(screen.getAllByRole("option", { name: /Cliente/ })).toHaveLength(2);

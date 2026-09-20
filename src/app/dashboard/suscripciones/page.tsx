@@ -132,16 +132,17 @@ export default function SuscripcionesPage() {
   }, [filtroEstado, autorizado, esAdmin]);
 
 
-  async function abrirCrear() {
-    setForm({ usuarioId: 0, planId: 0, fechaInicio: hoyISO() });
-    setFormError(null);
-    setMostrarForm(true);
+  // D1-B: búsqueda de socios en el modal (debounce 300ms). Sin texto se
+  // pide igual que antes (solo rol), así el resto no cambia.
+  const [busquedaUsuario, setBusquedaUsuario] = useState("");
+
+  async function cargarOpciones(busqueda: string) {
     setCargandoOpciones(true);
-
-
     try {
+      const params: { rol: string; q?: string } =
+        busqueda.trim() === "" ? { rol: "CLIENTE" } : { rol: "CLIENTE", q: busqueda.trim() };
       const [usuariosResponse, planesResponse] = await Promise.all([
-        api.get<PageResponse<UsuarioResponseDTO>>("/usuarios", { params: { rol: "CLIENTE" } }),
+        api.get<PageResponse<UsuarioResponseDTO>>("/usuarios", { params }),
         api.get<PageResponse<PlanResponseDTO>>("/planes", { params: { activo: true } }),
       ]);
       setUsuarios(usuariosResponse.data.content);
@@ -151,6 +152,22 @@ export default function SuscripcionesPage() {
     } finally {
       setCargandoOpciones(false);
     }
+  }
+
+  useEffect(() => {
+    if (!mostrarForm) return;
+    const t = setTimeout(() => void cargarOpciones(busquedaUsuario), 300);
+    return () => clearTimeout(t);
+  }, [busquedaUsuario, mostrarForm]);
+
+  function abrirCrear() {
+    setForm({ usuarioId: 0, planId: 0, fechaInicio: hoyISO() });
+    setFormError(null);
+    setBusquedaUsuario("");
+    setUsuarios([]);
+    setMostrarForm(true);
+    // La carga inicial la dispara el efecto de abajo (mismo camino que la
+    // búsqueda, sin fetch duplicado).
   }
 
 
@@ -347,6 +364,20 @@ export default function SuscripcionesPage() {
 
 
               <form onSubmit={handleSubmit} noValidate className="space-y-3">
+                <div>
+                  <label htmlFor="suscripcion-busqueda-usuario" className={labelClass}>
+                    Buscar socio
+                  </label>
+                  <input
+                    id="suscripcion-busqueda-usuario"
+                    type="search"
+                    value={busquedaUsuario}
+                    onChange={(event) => setBusquedaUsuario(event.target.value)}
+                    placeholder="Nombre o correo…"
+                    aria-label="Buscar socio por nombre o correo"
+                    className={input}
+                  />
+                </div>
                 <div>
                   <label className={labelClass}>Usuario</label>
                   <Select
