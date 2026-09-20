@@ -203,16 +203,16 @@ export default function AdminDashboardCharts({
       <section
         className={`${cardDark} lg:col-span-2 flex flex-col`}
         role="img"
-        aria-label={`Ingresos estimados por tipo de plan: ${dataIngresos
+        aria-label={`Ingresos vigentes estimados por tipo de plan: ${dataIngresos
           .map((d) => `${d.nombre} ${formatMoneda(d.ingreso)}`)
           .join(", ")}`}
       >
         <header className="mb-4">
           <h2 className="font-display text-lg font-bold text-concrete-100">
-            Ingresos estimados por tipo de plan
+            Ingresos vigentes estimados por tipo de plan
           </h2>
           <p className="font-mono text-[11px] text-concrete-300">
-            Suma de precios de suscripciones activas, por tipo de plan
+            Suma de precios de suscripciones vigentes, por tipo de plan
           </p>
         </header>
         <div className="h-64">

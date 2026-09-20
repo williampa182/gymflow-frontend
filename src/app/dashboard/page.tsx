@@ -178,7 +178,7 @@ function AdminDashboard({
           icono="suscripciones"
         />
         <PlateStat
-          label="Ingresos estimados"
+          label="Ingresos vigentes estimados"
           value={ingresosEstimados}
           variante="hazard"
           icono="ingresos"

@@ -130,6 +130,8 @@ describe("dashboard ADMIN", () => {
     expect(screen.getByText("5")).toBeInTheDocument();
     expect(screen.getByText("7")).toBeInTheDocument();
     expect(screen.getByText("$ 600.000")).toBeInTheDocument();
+    // D1-A: etiqueta decidida por William (ingresos = solo vigentes).
+    expect(screen.getByText("Ingresos vigentes estimados")).toBeInTheDocument();
   });
 
   it("muestra charts y accesos rápidos ADMIN", async () => {
