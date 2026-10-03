@@ -5,6 +5,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import axios from "axios";
 import api from "@/lib/api";
 import type {
+  ConteoSuscripciones,
   EstadoSuscripcion,
   PlanResponseDTO,
   Rol,
@@ -40,13 +41,27 @@ import {
 } from "@/lib/ui";
 
 
-const ESTADOS: EstadoSuscripcion[] = ["ACTIVA", "VENCIDA", "CANCELADA"];
+const TABS: { id: EstadoSuscripcion; titulo: string }[] = [
+  { id: "ACTIVA", titulo: "Activas" },
+  { id: "VENCIDA", titulo: "Vencidas" },
+  { id: "CANCELADA", titulo: "Historial" },
+];
 const ROLES_PERMITIDOS: Rol[] = ["ADMIN", "CLIENTE", "ENTRENADOR"];
-type PageResponse<T> = { content: T[] };
+type PageResponse<T> = { content: T[]; totalElements?: number };
 
+
+// Fecha local (zona del navegador), NUNCA UTC: toISOString() adelanta un
+// día después de las 19:00 en Colombia (00:00 UTC ya es mañana) y el backend
+// rechaza ese inicio "futuro" con 400. Incidente demo 2026-09-21.
+function aISOlocal(fecha: Date): string {
+  const y = fecha.getFullYear();
+  const m = String(fecha.getMonth() + 1).padStart(2, "0");
+  const d = String(fecha.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
 
 function hoyISO(): string {
-  return new Date().toISOString().split("T")[0];
+  return aISOlocal(new Date());
 }
 
 
@@ -54,7 +69,7 @@ function fechaFinEstimada(fechaInicio: string, duracionDias?: number): string {
   if (!fechaInicio || !duracionDias) return "";
   const fecha = new Date(`${fechaInicio}T00:00:00`);
   fecha.setDate(fecha.getDate() + duracionDias - 1);
-  return fecha.toISOString().split("T")[0];
+  return aISOlocal(fecha);
 }
 
 
@@ -76,7 +91,9 @@ export default function SuscripcionesPage() {
 
 
   const [suscripciones, setSuscripciones] = useState<SuscripcionResponseDTO[]>([]);
-  const [filtroEstado, setFiltroEstado] = useState<EstadoSuscripcion | "">("");
+  const [total, setTotal] = useState<number | null>(null);
+  const [conteo, setConteo] = useState<ConteoSuscripciones | null>(null);
+  const [filtroEstado, setFiltroEstado] = useState<EstadoSuscripcion>("ACTIVA");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -113,10 +130,15 @@ export default function SuscripcionesPage() {
     try {
       const response = esAdmin
         ? await api.get<PageResponse<SuscripcionResponseDTO>>("/suscripciones", {
-            params: filtroEstado ? { estado: filtroEstado } : {},
+            params: { estado: filtroEstado, size: 100 },
           })
         : await api.get<PageResponse<SuscripcionResponseDTO>>("/suscripciones/mis");
       setSuscripciones(response.data.content);
+      setTotal(
+        typeof response.data.totalElements === "number"
+          ? response.data.totalElements
+          : response.data.content.length
+      );
     } catch (err) {
       setError("No se pudieron cargar las suscripciones.");
       console.error(err);
@@ -126,10 +148,33 @@ export default function SuscripcionesPage() {
   }
 
 
+  async function cargarConteo() {
+    if (!esAdmin) return;
+    try {
+      const response = await api.get<ConteoSuscripciones>("/suscripciones/conteo-por-estado");
+      const datos = response?.data;
+      if (
+        typeof datos?.activas === "number" &&
+        typeof datos?.vencidas === "number" &&
+        typeof datos?.canceladas === "number"
+      ) {
+        setConteo(datos);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+
   useEffect(() => {
     if (autorizado) void cargarSuscripciones();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtroEstado, autorizado, esAdmin]);
+
+  useEffect(() => {
+    if (autorizado && esAdmin) void cargarConteo();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autorizado, esAdmin, suscripciones.length]);
 
 
   // D1-B: búsqueda de socios en el modal (debounce 300ms). Sin texto se
@@ -258,30 +303,67 @@ export default function SuscripcionesPage() {
   const fechaFin = fechaFinEstimada(form.fechaInicio, planSeleccionado?.duracionDias);
 
 
+  const conteoPorTab: Record<EstadoSuscripcion, number | null> = {
+    ACTIVA: conteo?.activas ?? null,
+    VENCIDA: conteo?.vencidas ?? null,
+    CANCELADA: conteo?.canceladas ?? null,
+  };
+  const tabActiva = TABS.find((tab) => tab.id === filtroEstado) ?? TABS[0];
+
+
   return (
     <div>
       <PageHeader
         titulo="Suscripciones"
         subtitulo="Clientes asociados a planes"
         acciones={
-          <>
-            <Select
-              value={filtroEstado}
-              onChange={(value) => setFiltroEstado(value as EstadoSuscripcion | "")}
-              options={ESTADOS.map((estado) => ({ value: estado, label: estado }))}
-              placeholder="Todos los estados"
-              ariaLabel="Filtrar por estado"
-              className="w-auto"
-            />
-            <button type="button" onClick={abrirCrear} className={buttonPrimary}>
-              + Nueva suscripción
-            </button>
-          </>
+          <button type="button" onClick={abrirCrear} className={buttonPrimary}>
+            + Nueva suscripción
+          </button>
         }
       />
 
+      <div role="tablist" aria-label="Filtrar por estado" className="mb-4 flex gap-2">
+        {TABS.map((tab) => {
+          const cantidad = conteoPorTab[tab.id];
+          const seleccionada = tab.id === filtroEstado;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={seleccionada}
+              onClick={() => setFiltroEstado(tab.id)}
+              className={
+                seleccionada
+                  ? `${buttonPrimary} relative`
+                  : `${buttonSecondaryDark} relative`
+              }
+            >
+              {tab.titulo}
+              {cantidad !== null && (
+                <span aria-label={`${cantidad} en ${tab.titulo}`} className="ml-2 font-mono text-xs opacity-80">
+                  {cantidad}
+                </span>
+              )}
+              {tab.id === "VENCIDA" && (cantidad ?? 0) > 0 && (
+                <span
+                  aria-hidden="true"
+                  className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-hazard-400"
+                />
+              )}
+            </button>
+          );
+        })}
+      </div>
 
       {error && <p className={`mb-4 ${errorBannerDark}`}>{error}</p>}
+
+      {total !== null && (
+        <p className="mb-2 font-mono text-xs text-concrete-300">
+          Mostrando {suscripciones.length} de {total} suscripciones {tabActiva.titulo.toLowerCase()}.
+        </p>
+      )}
 
 
       <div className={tableWrap}>
@@ -336,7 +418,7 @@ export default function SuscripcionesPage() {
 
 
         {suscripciones.length === 0 && (
-          <EmptyState mensaje="No hay suscripciones con ese filtro." variante="sinDatos" />
+          <EmptyState mensaje={`No hay suscripciones ${tabActiva.titulo.toLowerCase()}.`} variante="sinDatos" />
         )}
       </div>
 

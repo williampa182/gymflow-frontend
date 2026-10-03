@@ -185,7 +185,7 @@ describe("dashboard/suscripciones/page.tsx", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText("No hay suscripciones con ese filtro.")
+        screen.getByText("No hay suscripciones activas.")
       ).toBeInTheDocument();
     });
   });
@@ -199,6 +199,89 @@ describe("dashboard/suscripciones/page.tsx", () => {
       expect(
         screen.getByText("No se pudieron cargar las suscripciones.")
       ).toBeInTheDocument();
+    });
+  });
+
+  describe("tabs por estado", () => {
+    function mockListaYConteo() {
+      vi.mocked(api.get).mockImplementation((url) => {
+        if (url === "/suscripciones/conteo-por-estado") {
+          return Promise.resolve({ data: { activas: 2, vencidas: 1, canceladas: 3 } });
+        }
+        return Promise.resolve(pageResponse(SUSCRIPCIONES_MOCK));
+      });
+    }
+
+    it("arranca en Activas pidiendo estado ACTIVA con size 100", async () => {
+      mockListaYConteo();
+
+      renderSuscripciones();
+
+      await waitFor(() => {
+        expect(api.get).toHaveBeenCalledWith("/suscripciones", {
+          params: { estado: "ACTIVA", size: 100 },
+        });
+      });
+      expect(screen.getByRole("tab", { name: /Activas/ })).toHaveAttribute(
+        "aria-selected",
+        "true"
+      );
+    });
+
+    it("cambia a Vencidas y pide ese estado al backend", async () => {
+      mockListaYConteo();
+
+      renderSuscripciones();
+      await screen.findByText("Ana García");
+
+      fireEvent.click(screen.getByRole("tab", { name: /Vencidas/ }));
+
+      await waitFor(() => {
+        expect(api.get).toHaveBeenCalledWith("/suscripciones", {
+          params: { estado: "VENCIDA", size: 100 },
+        });
+      });
+      expect(screen.getByRole("tab", { name: /Vencidas/ })).toHaveAttribute(
+        "aria-selected",
+        "true"
+      );
+    });
+
+    it("cambia a Historial y pide CANCELADA al backend", async () => {
+      mockListaYConteo();
+
+      renderSuscripciones();
+      await screen.findByText("Ana García");
+
+      fireEvent.click(screen.getByRole("tab", { name: /Historial/ }));
+
+      await waitFor(() => {
+        expect(api.get).toHaveBeenCalledWith("/suscripciones", {
+          params: { estado: "CANCELADA", size: 100 },
+        });
+      });
+    });
+
+    it("muestra los conteos en cada tab", async () => {
+      mockListaYConteo();
+
+      renderSuscripciones();
+
+      await waitFor(() => {
+        expect(screen.getByRole("tab", { name: /Activas.*2/ })).toBeInTheDocument();
+      });
+      expect(screen.getByRole("tab", { name: /Vencidas.*1/ })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: /Historial.*3/ })).toBeInTheDocument();
+    });
+
+    it("muestra cuántas se listan del total", async () => {
+      mockListaYConteo();
+
+      renderSuscripciones();
+
+      await waitFor(() => {
+        expect(screen.getByText(/Mostrando 2 de 2 suscripciones activas/)).toBeInTheDocument();
+      });
     });
   });
 
@@ -319,6 +402,26 @@ describe("dashboard/suscripciones/page.tsx", () => {
           params: { rol: "CLIENTE", q: "rosa" },
         });
       });
+    });
+
+    it("prefilla fecha de inicio con el día local, no UTC (D0 2026-09-21)", async () => {
+      vi.mocked(api.get).mockImplementation((url) => {
+        if (url === "/suscripciones") return Promise.resolve(pageResponse(SUSCRIPCIONES_MOCK));
+        if (url === "/usuarios") return Promise.resolve(pageResponse(USUARIOS_MOCK));
+        return Promise.resolve(pageResponse(PLANES_MOCK));
+      });
+
+      renderSuscripciones();
+      fireEvent.click(await screen.findByRole("button", { name: "+ Nueva suscripción" }));
+      await waitFor(() => {
+        expect(api.get).toHaveBeenCalledWith("/usuarios", { params: { rol: "CLIENTE" } });
+      });
+
+      const ahora = new Date();
+      const esperado = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, "0")}-${String(
+        ahora.getDate()
+      ).padStart(2, "0")}`;
+      expect(screen.getByLabelText("Fecha de inicio")).toHaveValue(esperado);
     });
 
     it("rechaza una fecha de fin anterior a la fecha de inicio", async () => {

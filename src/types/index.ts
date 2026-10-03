@@ -55,6 +55,13 @@ export interface SuscripcionResponseDTO {
   creadoEn: string;
 }
 
+// Debe coincidir con ConteoSuscripcionesDTO (GET /suscripciones/conteo-por-estado).
+export interface ConteoSuscripciones {
+  activas: number;
+  vencidas: number;
+  canceladas: number;
+}
+
 // Auth — verificado contra AuthController.java / AuthResponse.java / LoginRequest.java
 export interface LoginRequest {
   email: string;
