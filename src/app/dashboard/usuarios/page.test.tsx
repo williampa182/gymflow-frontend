@@ -274,4 +274,83 @@ describe("dashboard/usuarios/page.tsx", () => {
       );
     });
   });
+
+  describe("importar socios (CSV)", () => {
+    it("abre el modal con plantilla, archivo y solo-validar por defecto", async () => {
+      vi.mocked(api.get).mockResolvedValueOnce(pageResponse(USUARIOS_MOCK));
+
+      renderUsuarios();
+      await screen.findByText("ana@example.com");
+
+      await userEvent.setup().click(screen.getByRole("button", { name: "Importar" }));
+
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+      expect(screen.getByText(/nombre,tipoDocumento,numeroDocumento/)).toBeInTheDocument();
+      expect(screen.getByLabelText("Archivo CSV")).toBeInTheDocument();
+      expect(screen.getByLabelText(/Solo validar/)).toBeChecked();
+    });
+
+    it("descarga la plantilla CSV", async () => {
+      const user = userEvent.setup();
+      vi.mocked(api.get).mockImplementation((url) => {
+        if (url === "/usuarios/plantilla-importacion") {
+          return Promise.resolve({ data: new Blob(["nombre,"], { type: "text/csv" }) });
+        }
+        return Promise.resolve(pageResponse(USUARIOS_MOCK));
+      });
+
+      renderUsuarios();
+      await screen.findByText("ana@example.com");
+      await user.click(screen.getByRole("button", { name: "Importar" }));
+      await user.click(screen.getByRole("button", { name: "Descargar plantilla" }));
+
+      await waitFor(() => {
+        expect(api.get).toHaveBeenCalledWith("/usuarios/plantilla-importacion", {
+          responseType: "blob",
+        });
+      });
+    });
+
+    it("valida en seco y muestra el resumen sin recargar", async () => {
+      const user = userEvent.setup();
+      vi.mocked(api.get).mockResolvedValue(pageResponse(USUARIOS_MOCK));
+      vi.mocked(api.post).mockResolvedValue({
+        data: {
+          totalFilas: 2,
+          creados: 1,
+          omitidos: [{ fila: 3, motivo: "Ya existe un usuario con ese documento" }],
+          errores: [],
+        },
+      });
+
+      renderUsuarios();
+      await screen.findByText("ana@example.com");
+      await user.click(screen.getByRole("button", { name: "Importar" }));
+
+      const archivo = new File(["nombre,\nAna,CC"], "socios.csv", { type: "text/csv" });
+      await user.upload(screen.getByLabelText("Archivo CSV"), archivo);
+      await user.click(screen.getByRole("button", { name: "Validar" }));
+
+      await waitFor(() => {
+        expect(api.post).toHaveBeenCalledWith(
+          "/usuarios/importar",
+          expect.any(FormData),
+          expect.objectContaining({ params: { dryRun: true } })
+        );
+      });
+      expect(await screen.findByText(/Creados: 1/)).toBeInTheDocument();
+      expect(screen.getByText(/Fila 3: Ya existe/)).toBeInTheDocument();
+    });
+
+    it("exige seleccionar archivo antes de importar", async () => {
+      const user = userEvent.setup();
+      vi.mocked(api.get).mockResolvedValue(pageResponse(USUARIOS_MOCK));
+
+      renderUsuarios();
+      await screen.findByText("ana@example.com");
+      await user.click(screen.getByRole("button", { name: "Importar" }));
+
+      expect(screen.getByRole("button", { name: "Validar" })).toBeDisabled();
+    });
+  });
 });

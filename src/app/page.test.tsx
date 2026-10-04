@@ -11,7 +11,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("landing pública", () => {
-  it("muestra el hero, CTAs, funcionalidades y los 12 chips del stack", async () => {
+  it("muestra el hero, CTAs, funcionalidades y los 13 chips del stack", async () => {
     render(await Home());
 
     expect(
@@ -37,7 +37,7 @@ describe("landing pública", () => {
     expect(
       screen.getByRole("heading", { name: /stack tecnológico/i }),
     ).toBeInTheDocument();
-    expect(screen.getByTestId("stack-chips").children).toHaveLength(12);
+    expect(screen.getByTestId("stack-chips").children).toHaveLength(13);
     expect(screen.getByText("Next.js")).toBeInTheDocument();
     expect(screen.getByText("Playwright")).toBeInTheDocument();
   });

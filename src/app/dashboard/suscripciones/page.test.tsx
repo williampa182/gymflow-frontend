@@ -206,7 +206,7 @@ describe("dashboard/suscripciones/page.tsx", () => {
     function mockListaYConteo() {
       vi.mocked(api.get).mockImplementation((url) => {
         if (url === "/suscripciones/conteo-por-estado") {
-          return Promise.resolve({ data: { activas: 2, vencidas: 1, canceladas: 3 } });
+          return Promise.resolve({ data: { activas: 2, vencidas: 1, canceladas: 3, congeladas: 1 } });
         }
         return Promise.resolve(pageResponse(SUSCRIPCIONES_MOCK));
       });
@@ -262,6 +262,21 @@ describe("dashboard/suscripciones/page.tsx", () => {
       });
     });
 
+    it("cambia a Congeladas y pide CONGELADA al backend", async () => {
+      mockListaYConteo();
+
+      renderSuscripciones();
+      await screen.findByText("Ana García");
+
+      fireEvent.click(screen.getByRole("tab", { name: /Congeladas/ }));
+
+      await waitFor(() => {
+        expect(api.get).toHaveBeenCalledWith("/suscripciones", {
+          params: { estado: "CONGELADA", size: 100 },
+        });
+      });
+    });
+
     it("muestra los conteos en cada tab", async () => {
       mockListaYConteo();
 
@@ -272,6 +287,7 @@ describe("dashboard/suscripciones/page.tsx", () => {
       });
       expect(screen.getByRole("tab", { name: /Vencidas.*1/ })).toBeInTheDocument();
       expect(screen.getByRole("tab", { name: /Historial.*3/ })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: /Congeladas.*1/ })).toBeInTheDocument();
     });
 
     it("muestra cuántas se listan del total", async () => {
@@ -282,6 +298,26 @@ describe("dashboard/suscripciones/page.tsx", () => {
       await waitFor(() => {
         expect(screen.getByText(/Mostrando 2 de 2 suscripciones activas/)).toBeInTheDocument();
       });
+    });
+
+    it("congela una activa con el botón Congelar", async () => {
+      vi.mocked(api.get).mockImplementation((url) => {
+        if (url === "/suscripciones/conteo-por-estado") {
+          return Promise.resolve({ data: { activas: 1, vencidas: 0, canceladas: 0, congeladas: 0 } });
+        }
+        return Promise.resolve(pageResponse(SUSCRIPCIONES_MOCK));
+      });
+      vi.mocked(api.patch).mockResolvedValue({ data: {} });
+
+      renderSuscripciones();
+      await screen.findByText("Ana García");
+
+      fireEvent.click(screen.getAllByRole("button", { name: "Congelar" })[0]);
+
+      await waitFor(() => {
+        expect(api.patch).toHaveBeenCalledWith("/suscripciones/1/congelar");
+      });
+      expect(await screen.findByText("Suscripción congelada.")).toBeInTheDocument();
     });
   });
 

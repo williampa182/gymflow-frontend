@@ -49,11 +49,12 @@ const colorPorEstado: Record<EstadoSuscripcion, string> = {
   ACTIVA: PALETA.moss600,
   VENCIDA: PALETA.hazard500,
   CANCELADA: PALETA.rust600,
+  CONGELADA: PALETA.concrete300,
 };
 
 const ordenTipoPlan: TipoPlan[] = ["MENSUAL", "TRIMESTRAL", "SEMESTRAL", "ANUAL"];
 const ordenRol: Rol[] = ["ADMIN", "ENTRENADOR", "CLIENTE"];
-const ordenEstado: EstadoSuscripcion[] = ["ACTIVA", "VENCIDA", "CANCELADA"];
+const ordenEstado: EstadoSuscripcion[] = ["ACTIVA", "VENCIDA", "CONGELADA", "CANCELADA"];
 
 // ─── Tooltip custom (respeta la paleta) ───────────────────────────
 function ChartTooltip({

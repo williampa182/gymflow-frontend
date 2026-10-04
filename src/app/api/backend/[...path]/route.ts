@@ -77,16 +77,21 @@ async function proxy(request: NextRequest, path: string[]) {
   });
 
   const hasBody = !["GET", "HEAD"].includes(request.method);
-  const body = hasBody ? await request.text() : undefined;
+  // Binario-transparente: arrayBuffer en vez de text() para no corromper
+  // subidas multipart (importación CSV de socios). El Content-Type entrante
+  // se reenvía tal cual; el control CSRF sigue siendo el chequeo de Origin
+  // de arriba, no este header.
+  const cuerpo = hasBody ? await request.arrayBuffer() : undefined;
+  const contentTypeEntrante = request.headers.get("content-type") ?? "application/json";
 
   const backendRes = await fetch(targetUrl, {
     method: request.method,
     headers: {
-      "Content-Type": "application/json",
+      "Content-Type": contentTypeEntrante,
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(kioskKey ? { "X-Kiosk-Key": kioskKey } : {}),
     },
-    body: body && body.length > 0 ? body : undefined,
+    body: cuerpo && cuerpo.byteLength > 0 ? cuerpo : undefined,
   });
 
   const responseText = await backendRes.text();

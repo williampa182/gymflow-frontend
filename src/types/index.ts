@@ -1,7 +1,7 @@
 // Enums — deben coincidir exactamente con los del backend
 export type Rol = "ADMIN" | "ENTRENADOR" | "CLIENTE";
 export type TipoPlan = "MENSUAL" | "TRIMESTRAL" | "SEMESTRAL" | "ANUAL";
-export type EstadoSuscripcion = "ACTIVA" | "VENCIDA" | "CANCELADA";
+export type EstadoSuscripcion = "ACTIVA" | "VENCIDA" | "CANCELADA" | "CONGELADA";
 
 export interface UsuarioResponseDTO {
   id: number;
@@ -60,6 +60,7 @@ export interface ConteoSuscripciones {
   activas: number;
   vencidas: number;
   canceladas: number;
+  congeladas: number;
 }
 
 // Auth — verificado contra AuthController.java / AuthResponse.java / LoginRequest.java

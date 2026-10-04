@@ -44,6 +44,7 @@ import {
 const TABS: { id: EstadoSuscripcion; titulo: string }[] = [
   { id: "ACTIVA", titulo: "Activas" },
   { id: "VENCIDA", titulo: "Vencidas" },
+  { id: "CONGELADA", titulo: "Congeladas" },
   { id: "CANCELADA", titulo: "Historial" },
 ];
 const ROLES_PERMITIDOS: Rol[] = ["ADMIN", "CLIENTE", "ENTRENADOR"];
@@ -112,6 +113,7 @@ export default function SuscripcionesPage() {
 
 
   const [cancelandoId, setCancelandoId] = useState<number | null>(null);
+  const [congelandoId, setCongelandoId] = useState<number | null>(null);
   const [dialogo, setDialogo] = useState<{ id: number } | null>(null);
 
 
@@ -156,7 +158,8 @@ export default function SuscripcionesPage() {
       if (
         typeof datos?.activas === "number" &&
         typeof datos?.vencidas === "number" &&
-        typeof datos?.canceladas === "number"
+        typeof datos?.canceladas === "number" &&
+        typeof datos?.congeladas === "number"
       ) {
         setConteo(datos);
       }
@@ -263,9 +266,30 @@ export default function SuscripcionesPage() {
   }
 
 
+  async function congelar(suscripcion: SuscripcionResponseDTO, congelarAhora: boolean) {
+    setCongelandoId(suscripcion.id);
+    setError(null);
+    try {
+      await api.patch(`/suscripciones/${suscripcion.id}/${congelarAhora ? "congelar" : "descongelar"}`);
+      notificar("exito", congelarAhora ? "Suscripción congelada." : "Suscripción descongelada.");
+      await cargarSuscripciones();
+    } catch (err) {
+      console.error(err);
+      const mensaje = congelarAhora
+        ? "No se pudo congelar la suscripción."
+        : "No se pudo descongelar la suscripción.";
+      setError(mensaje);
+      notificar("error", mensaje);
+    } finally {
+      setCongelandoId(null);
+    }
+  }
+
+
   const estadoVariante: Record<EstadoSuscripcion, "moss" | "hazard" | "neutral"> = {
     ACTIVA: "moss",
     VENCIDA: "hazard",
+    CONGELADA: "neutral",
     CANCELADA: "neutral",
   };
 
@@ -306,6 +330,7 @@ export default function SuscripcionesPage() {
   const conteoPorTab: Record<EstadoSuscripcion, number | null> = {
     ACTIVA: conteo?.activas ?? null,
     VENCIDA: conteo?.vencidas ?? null,
+    CONGELADA: conteo?.congeladas ?? null,
     CANCELADA: conteo?.canceladas ?? null,
   };
   const tabActiva = TABS.find((tab) => tab.id === filtroEstado) ?? TABS[0];
@@ -399,7 +424,28 @@ export default function SuscripcionesPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">
+                    <div className="flex flex-wrap justify-end gap-2">
                     {suscripcion.estado === "ACTIVA" && (
+                      <button
+                        type="button"
+                        onClick={() => void congelar(suscripcion, true)}
+                        disabled={congelandoId === suscripcion.id}
+                        className={buttonSecondaryDark}
+                      >
+                        {congelandoId === suscripcion.id ? "…" : "Congelar"}
+                      </button>
+                    )}
+                    {suscripcion.estado === "CONGELADA" && (
+                      <button
+                        type="button"
+                        onClick={() => void congelar(suscripcion, false)}
+                        disabled={congelandoId === suscripcion.id}
+                        className={buttonSecondaryDark}
+                      >
+                        {congelandoId === suscripcion.id ? "…" : "Descongelar"}
+                      </button>
+                    )}
+                    {(suscripcion.estado === "ACTIVA" || suscripcion.estado === "CONGELADA") && (
                       <button
                         type="button"
                         onClick={() => setDialogo({ id: suscripcion.id })}
@@ -409,6 +455,7 @@ export default function SuscripcionesPage() {
                         {pendiente ? "…" : "Cancelar"}
                       </button>
                     )}
+                    </div>
                   </td>
                 </tr>
               );
@@ -564,6 +611,7 @@ function OwnSubscriptionsView({
   const estadoVariante: Record<EstadoSuscripcion, "moss" | "hazard" | "neutral"> = {
     ACTIVA: "moss",
     VENCIDA: "hazard",
+    CONGELADA: "neutral",
     CANCELADA: "neutral",
   };
 
