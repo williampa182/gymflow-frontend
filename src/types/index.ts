@@ -1,6 +1,6 @@
 // Enums — deben coincidir exactamente con los del backend
 export type Rol = "ADMIN" | "ENTRENADOR" | "CLIENTE";
-export type TipoPlan = "MENSUAL" | "TRIMESTRAL" | "SEMESTRAL" | "ANUAL";
+export type TipoPlan = "MENSUAL" | "TRIMESTRAL" | "SEMESTRAL" | "ANUAL" | "PASE_DIARIO";
 export type EstadoSuscripcion = "ACTIVA" | "VENCIDA" | "CANCELADA" | "CONGELADA";
 
 export interface UsuarioResponseDTO {

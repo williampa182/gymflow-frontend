@@ -78,7 +78,8 @@ function semaforoDe(membresia: SuscripcionRecepcion | null): {
     return { texto: "Vencida", variante: "rust" };
   }
   const dias = diasRestantes(membresia.fechaFin);
-  if (dias <= 0) return { texto: "Vencida", variante: "rust" };
+  if (dias < 0) return { texto: "Vencida", variante: "rust" };
+  if (dias === 0) return { texto: "Vence hoy", variante: "hazard" };
   if (dias <= 7) return { texto: "Por vencer", variante: "hazard" };
   return { texto: "Activa", variante: "moss" };
 }

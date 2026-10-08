@@ -52,7 +52,7 @@ const colorPorEstado: Record<EstadoSuscripcion, string> = {
   CONGELADA: PALETA.concrete300,
 };
 
-const ordenTipoPlan: TipoPlan[] = ["MENSUAL", "TRIMESTRAL", "SEMESTRAL", "ANUAL"];
+const ordenTipoPlan: TipoPlan[] = ["MENSUAL", "TRIMESTRAL", "SEMESTRAL", "ANUAL", "PASE_DIARIO"];
 const ordenRol: Rol[] = ["ADMIN", "ENTRENADOR", "CLIENTE"];
 const ordenEstado: EstadoSuscripcion[] = ["ACTIVA", "VENCIDA", "CONGELADA", "CANCELADA"];
 

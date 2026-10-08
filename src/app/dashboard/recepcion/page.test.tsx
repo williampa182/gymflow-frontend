@@ -136,6 +136,16 @@ describe("dashboard/recepcion/page.tsx", () => {
     expect(screen.getByText("Vencida hace 3 días")).toBeInTheDocument();
   });
 
+  it("muestra Vence hoy (no Vencida) cuando vence el mismo día: caso pase diario", async () => {
+    mockBusqueda([suscripcion({ estado: "ACTIVA", fechaFin: isoLocalDias(0) })]);
+
+    renderRecepcion();
+    await buscarSocio();
+
+    expect(screen.getAllByText("Vence hoy").length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByText("Vencida")).not.toBeInTheDocument();
+  });
+
   it("distingue cancelada de vencida en el semáforo", async () => {
     mockBusqueda([suscripcion({ estado: "CANCELADA", fechaFin: isoLocalDias(20) })]);
 

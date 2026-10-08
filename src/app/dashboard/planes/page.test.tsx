@@ -122,6 +122,32 @@ describe("dashboard/planes/page.tsx", () => {
     expect(screen.getByText("Plan Anual Premium")).toBeInTheDocument();
   });
 
+  it("muestra los pases diarios en la lista con su tipo visible (no se silencian)", async () => {
+    const paseMock = {
+      id: 9,
+      nombre: "Pase Día",
+      descripcion: "Acceso por un día",
+      precio: 15000,
+      duracionDias: 1,
+      tipo: "PASE_DIARIO" as const,
+      limiteClases: 0,
+      incluyeClases: false,
+      incluyeEntrenadorPersonal: false,
+      activo: true,
+      creadoEn: "2026-10-08T10:00:00",
+    };
+    vi.mocked(api.get).mockResolvedValueOnce(pageResponse([...plansMock, paseMock]));
+
+    renderPlanes();
+
+    await waitFor(() => {
+      expect(screen.getByText("Pase Día")).toBeInTheDocument();
+    });
+    expect(
+      screen.getAllByText((_, el) => el?.textContent === "PASE_DIARIO · 1 días").length
+    ).toBeGreaterThanOrEqual(1);
+  });
+
   it("PREVENCIÓN DE REGRESIÓN: detecta si alguien rompe el contrato Page<T>", async () => {
     // ─── Qué previene este test ───────────────────────────────────
     // El 13/07 el frontend se rompió en producción porque el backend pasó
