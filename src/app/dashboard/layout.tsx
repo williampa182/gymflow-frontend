@@ -144,6 +144,9 @@ function SidebarContent({ nombre, onNavigate }: { nombre: string | null; onNavig
         {hasRole("ADMIN") && (
           <NavLink href="/dashboard/suscripciones" label="Suscripciones" icon={<IconFolder />} onNavigate={onNavigate} />
         )}
+        {hasRole("ADMIN") && (
+          <NavLink href="/dashboard/en-riesgo" label="En riesgo" icon={<IconFolder />} onNavigate={onNavigate} />
+        )}
       </nav>
 
       <div className="border-t border-white/10 p-3">
